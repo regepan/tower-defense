@@ -578,11 +578,11 @@ function draw() {
     const t = state.selectedTower;
     const def = TOWER_DEFS[t.type];
     ctx.save();
-    ctx.fillStyle = def.color + '18';
+    ctx.fillStyle = def.color + '40';
     ctx.beginPath();
     ctx.arc(t.cx, t.cy, def.range * CELL, 0, Math.PI*2);
     ctx.fill();
-    ctx.strokeStyle = def.color + 'aa';
+    ctx.strokeStyle = def.color + '99';
     ctx.lineWidth = 2;
     ctx.setLineDash([7, 5]);
     ctx.beginPath();
