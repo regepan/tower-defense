@@ -1,0 +1,8 @@
+{
+  "appId": "com.ist.towerdefense",
+  "appName": "Tower Defense",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
