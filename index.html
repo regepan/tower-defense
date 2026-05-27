@@ -56,24 +56,39 @@
       max-width: 792px;
     }
     .tower-btn {
-      padding: 8px 12px;
-      min-height: 48px;
-      min-width: 60px;
+      padding: 4px 8px;
+      min-height: 34px;
+      min-width: 50px;
       border: 2px solid #555;
       background: #222;
       color: #ccc;
       cursor: pointer;
       font-family: inherit;
-      font-size: clamp(0.68rem, 2vw, 0.8rem);
+      font-size: clamp(0.62rem, 1.8vw, 0.72rem);
       border-radius: 4px;
       transition: all 0.15s;
       flex: 1 1 auto;
-      max-width: 140px;
+      max-width: 110px;
       text-align: center;
     }
     .tower-btn:hover { border-color: #4af; color: #fff; }
     .tower-btn.selected { border-color: #4af; background: #1a3a5a; color: #4af; }
-    .tower-btn .cost { color: #fa4; font-size: 0.68rem; display: block; margin-top: 2px; }
+    .tower-btn .cost { color: #fa4; font-size: 0.6rem; display: block; margin-top: 1px; }
+    .speed-btn {
+      padding: 4px 10px;
+      min-height: 30px;
+      border: 2px solid #555;
+      background: #222;
+      color: #aaa;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: clamp(0.68rem, 2vw, 0.78rem);
+      border-radius: 4px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .speed-btn:hover { border-color: #4af; color: #fff; }
+    .speed-btn.active { border-color: #4fa; background: #1a3a2a; color: #4fa; }
     #msg {
       margin-top: 8px;
       font-size: clamp(0.8rem, 2.5vw, 1rem);
@@ -106,6 +121,9 @@
   <div class="stat">Gold: <span id="gold">150</span></div>
   <div class="stat">Score: <span id="score">0</span></div>
   <button id="start-btn">Start Wave</button>
+  <button class="speed-btn active" data-speed="1">1x</button>
+  <button class="speed-btn" data-speed="2">2x</button>
+  <button class="speed-btn" data-speed="3">3x</button>
 </div>
 <canvas id="canvas"></canvas>
 <div id="panel">
@@ -159,6 +177,8 @@ const TOWER_DEFS = {
   slow:   { name:'Freeze', color:'#88f', cost:60,  dmg:3,   range:2.5, fireRate:1000, aoe:0, slow:0.4 },
   bomb:   { name:'Bomb',   color:'#f44', cost:100, dmg:30,  range:3,   fireRate:2000, aoe:1.2 },
 };
+
+let gameSpeed = 1;
 
 let state = {
   gold: 150, lives: 20, score: 0,
@@ -292,10 +312,18 @@ document.querySelectorAll('.tower-btn').forEach(btn => {
 
 document.getElementById('start-btn').addEventListener('click', startWave);
 
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gameSpeed = Number(btn.dataset.speed);
+  });
+});
+
 // Game loop
 let lastTime = 0;
 function loop(ts) {
-  const dt = Math.min(ts - lastTime, 100);
+  const dt = Math.min(ts - lastTime, 100) * gameSpeed;
   lastTime = ts;
   update(dt);
   draw();
@@ -467,14 +495,16 @@ function draw() {
   });
   ctx.stroke();
 
-  // Start / End markers
+  // Start / End markers (icons only)
   const s = PATH[0], e = PATH[PATH.length - 1];
   ctx.fillStyle = '#4f8';
-  ctx.font = 'bold 11px Courier New';
-  ctx.textAlign = 'center';
-  ctx.fillText('START', s[0]*CELL+CELL/2, s[1]*CELL+CELL/2+4);
+  ctx.beginPath();
+  ctx.arc(s[0]*CELL+CELL/2, s[1]*CELL+CELL/2, 6, 0, Math.PI*2);
+  ctx.fill();
   ctx.fillStyle = '#f44';
-  ctx.fillText('END', e[0]*CELL+CELL/2, e[1]*CELL+CELL/2+4);
+  ctx.beginPath();
+  ctx.arc(e[0]*CELL+CELL/2, e[1]*CELL+CELL/2, 6, 0, Math.PI*2);
+  ctx.fill();
 
   // Hover preview
   if (state.hoverCell) {
