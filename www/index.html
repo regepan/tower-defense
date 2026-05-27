@@ -128,6 +128,24 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.65; }
     }
+    #tower-actions {
+      display: flex; gap: 8px; margin-top: 6px; justify-content: center; flex-wrap: wrap;
+    }
+    .action-btn {
+      padding: 4px 16px; min-height: 30px;
+      border: 2px solid; background: #2a1010; color: #f44;
+      border-color: #f44;
+      cursor: pointer; font-family: inherit;
+      font-size: clamp(0.68rem, 2vw, 0.78rem);
+      border-radius: 4px; transition: all 0.15s; white-space: nowrap;
+    }
+    .action-btn.upgrade {
+      border-color: #4fa; color: #4fa; background: #1a2a1a;
+    }
+    .action-btn.upgrade:disabled {
+      opacity: 0.4; cursor: default;
+    }
+    .action-btn:hover:not(:disabled) { opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -182,7 +200,10 @@
       Bomb<span class="cost">100G | DMG:30 AOE</span>
     </button>
   </div>
-  <button id="abolish-btn" style="display:none;margin-top:6px;padding:4px 16px;min-height:30px;border:2px solid #f44;background:#2a1010;color:#f44;cursor:pointer;font-family:inherit;font-size:clamp(0.68rem,2vw,0.78rem);border-radius:4px;">廃止 (50%返金)</button>
+  <div id="tower-actions" style="display:none;">
+    <button id="upgrade-btn" class="action-btn upgrade">強化</button>
+    <button id="abolish-btn" class="action-btn">廃止 (50%返金)</button>
+  </div>
   <div id="msg"></div>
 </div>
 
@@ -379,6 +400,23 @@ function loadStage(stageId) {
 }
 
 // ─── Tower Definitions ────────────────────────────────────────────────
+const MAX_TOWER_LEVEL = 3;
+
+function getUpgradeCost(tower) {
+  return TOWER_DEFS[tower.type].cost * tower.level;
+}
+
+function getEffectiveDef(tower) {
+  const base = TOWER_DEFS[tower.type];
+  const lv = tower.level - 1;
+  return {
+    ...base,
+    dmg:      Math.round(base.dmg * Math.pow(1.5, lv)),
+    range:    base.range * Math.pow(1.1, lv),
+    fireRate: Math.round(base.fireRate * Math.pow(0.85, lv)),
+  };
+}
+
 const TOWER_DEFS = {
   basic:  { name:'Basic',  color:'#4af', cost:50,  dmg:10,  range:2.5, fireRate:1200, aoe:0 },
   sniper: { name:'Sniper', color:'#f84', cost:80,  dmg:40,  range:5,   fireRate:3000, aoe:0 },
@@ -398,6 +436,8 @@ let state = {
 };
 
 const startBtn = document.getElementById('start-btn');
+const towerActions = document.getElementById('tower-actions');
+const upgradeBtn = document.getElementById('upgrade-btn');
 const abolishBtn = document.getElementById('abolish-btn');
 const speedBtn = document.getElementById('speed-btn');
 
@@ -458,7 +498,20 @@ function updateUI() {
   document.getElementById('lives').textContent = state.lives;
   document.getElementById('gold').textContent = state.gold;
   document.getElementById('score').textContent = state.score;
-  abolishBtn.style.display = state.selectedTower ? 'inline-block' : 'none';
+
+  const t = state.selectedTower;
+  towerActions.style.display = t ? 'flex' : 'none';
+  if (t) {
+    const def = getEffectiveDef(t);
+    const canUpgrade = t.level < MAX_TOWER_LEVEL;
+    upgradeBtn.style.display = canUpgrade ? '' : 'none';
+    if (canUpgrade) {
+      const cost = getUpgradeCost(t);
+      upgradeBtn.textContent = `強化 Lv.${t.level + 1} (${cost}G)`;
+      upgradeBtn.disabled = state.gold < cost;
+    }
+    setMsg(`${TOWER_DEFS[t.type].name} Lv.${t.level} | DMG:${def.dmg} RNG:${def.range.toFixed(1)} SPD:${(def.fireRate/1000).toFixed(2)}s`);
+  }
 }
 
 // ─── Result Screen ────────────────────────────────────────────────────
@@ -484,9 +537,21 @@ function showResult(isWin) {
 }
 
 // ─── Input ────────────────────────────────────────────────────────────
+upgradeBtn.addEventListener('click', () => {
+  const t = state.selectedTower;
+  if (!t || t.level >= MAX_TOWER_LEVEL) return;
+  const cost = getUpgradeCost(t);
+  if (state.gold < cost) return;
+  state.gold -= cost;
+  t.totalCost += cost;
+  t.level++;
+  t.timer = 0;
+  updateUI();
+});
+
 abolishBtn.addEventListener('click', () => {
   if (!state.selectedTower) return;
-  state.gold += Math.floor(TOWER_DEFS[state.selectedTower.type].cost * 0.5);
+  state.gold += Math.floor(state.selectedTower.totalCost * 0.5);
   state.towers = state.towers.filter(t => t !== state.selectedTower);
   state.selectedTower = null;
   updateUI();
@@ -510,10 +575,12 @@ function handleTap(clientX, clientY) {
   const existing = state.towers.find(t => t.col === col && t.row === row);
   if (existing) {
     state.selectedTower = (state.selectedTower === existing) ? null : existing;
+    if (!state.selectedTower) setMsg('');
     updateUI();
     return;
   }
   state.selectedTower = null;
+  setMsg('');
   updateUI();
 
   if (PATH_SET.has(`${col},${row}`)) return;
@@ -524,7 +591,7 @@ function handleTap(clientX, clientY) {
     col, row, type: state.selectedType,
     cx: col * CELL + CELL / 2,
     cy: row * CELL + CELL / 2,
-    timer: 0,
+    timer: 0, level: 1, totalCost: def.cost,
   });
   updateUI();
 }
@@ -650,7 +717,7 @@ function update(dt, rawDt) {
 
   state.towers.forEach(tower => {
     tower.timer += dt;
-    const def = TOWER_DEFS[tower.type];
+    const def = getEffectiveDef(tower);
     if (tower.timer < def.fireRate) return;
     const inRange = state.enemies.filter(en =>
       dist({ x: tower.cx, y: tower.cy }, en) <= def.range * CELL
@@ -774,7 +841,7 @@ function draw() {
 
   if (state.selectedTower) {
     const t = state.selectedTower;
-    const def = TOWER_DEFS[t.type];
+    const def = getEffectiveDef(t);
     ctx.save();
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = def.color;
@@ -789,9 +856,17 @@ function draw() {
   }
 
   state.towers.forEach(tower => {
-    const def = TOWER_DEFS[tower.type];
+    const def = getEffectiveDef(tower);
     const x = tower.cx, y = tower.cy;
     const hs = CELL * 0.38;
+    // glow for upgraded towers
+    if (tower.level > 1) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = def.color;
+      ctx.beginPath(); ctx.arc(x, y, hs * 0.85, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
     ctx.fillStyle = def.color;
     ctx.beginPath(); ctx.arc(x, y, hs * 0.5, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.3)';
@@ -799,6 +874,15 @@ function draw() {
     ctx.beginPath();
     ctx.arc(x, y, hs * 0.7, -Math.PI/2, -Math.PI/2 + Math.PI*2*Math.min(tower.timer/def.fireRate,1));
     ctx.stroke();
+    // level stars
+    if (tower.level > 1) {
+      ctx.fillStyle = '#ffd700';
+      ctx.font = `bold ${Math.round(CELL * 0.22)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('★'.repeat(tower.level - 1), x, y + hs * 0.6);
+      ctx.textBaseline = 'alphabetic';
+    }
   });
 
   state.enemies.forEach(en => {
