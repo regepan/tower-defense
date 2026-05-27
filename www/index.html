@@ -150,6 +150,7 @@
     Bomb<span class="cost">100G | DMG:30 AOE</span>
   </button>
 </div>
+<button id="abolish-btn" style="display:none;margin-top:6px;padding:4px 16px;min-height:30px;border:2px solid #f44;background:#2a1010;color:#f44;cursor:pointer;font-family:inherit;font-size:clamp(0.68rem,2vw,0.78rem);border-radius:4px;">廃止 (50%返金)</button>
 <div id="msg"></div>
 
 <script>
@@ -256,12 +257,24 @@ function startWave() {
 }
 
 function setMsg(t) { document.getElementById('msg').textContent = t; }
+const abolishBtn = document.getElementById('abolish-btn');
+
 function updateUI() {
   document.getElementById('wave-num').textContent = state.wave;
   document.getElementById('lives').textContent = state.lives;
   document.getElementById('gold').textContent = state.gold;
   document.getElementById('score').textContent = state.score;
+  abolishBtn.style.display = state.selectedTower ? 'inline-block' : 'none';
 }
+
+abolishBtn.addEventListener('click', () => {
+  if (!state.selectedTower) return;
+  const def = TOWER_DEFS[state.selectedTower.type];
+  state.gold += Math.floor(def.cost * 0.5);
+  state.towers = state.towers.filter(t => t !== state.selectedTower);
+  state.selectedTower = null;
+  updateUI();
+});
 
 function getCanvasCoords(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
@@ -282,11 +295,13 @@ function handleTap(clientX, clientY) {
   const existing = state.towers.find(t => t.col === col && t.row === row);
   if (existing) {
     state.selectedTower = (state.selectedTower === existing) ? null : existing;
+    updateUI();
     return;
   }
 
   // Tap elsewhere → deselect tower
   state.selectedTower = null;
+  updateUI();
 
   // Try to place a new tower
   if (PATH_SET.has(`${col},${row}`)) return;
