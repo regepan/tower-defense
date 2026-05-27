@@ -616,11 +616,6 @@ function draw() {
     const x = tower.cx, y = tower.cy;
     const hs = CELL * 0.38;
 
-    ctx.fillStyle = '#334';
-    ctx.fillRect(x - hs, y - hs, hs*2, hs*2);
-    ctx.strokeStyle = isSelected ? '#fff' : def.color;
-    ctx.lineWidth = isSelected ? 3 : 2;
-    ctx.strokeRect(x - hs, y - hs, hs*2, hs*2);
 
     ctx.fillStyle = def.color;
     ctx.beginPath();
