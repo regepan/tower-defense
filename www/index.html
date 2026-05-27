@@ -43,7 +43,7 @@
       display: block;
       width: 100%;
       max-width: 792px;
-      aspect-ratio: 792 / 572;
+      aspect-ratio: 792 / 660;
       touch-action: none;
     }
     #panel {
@@ -106,11 +106,20 @@
       font-family: inherit;
       font-size: clamp(0.78rem, 2.5vw, 0.9rem);
       border-radius: 4px;
-      transition: all 0.15s;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
       white-space: nowrap;
     }
     #start-btn:hover { background: #2a5a8a; }
     #start-btn:disabled { opacity: 0.4; cursor: default; }
+    #start-btn.countdown {
+      border-color: #fa4;
+      color: #fa4;
+      animation: pulse-btn 1s ease-in-out infinite;
+    }
+    @keyframes pulse-btn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
   </style>
 </head>
 <body>
@@ -146,23 +155,23 @@
 <script>
 const CELL = 44;
 const COLS = 18;
-const ROWS = 13;
-const W = CELL * COLS;
-const H = CELL * ROWS;
+const ROWS = 15;
+const W = CELL * COLS;  // 792
+const H = CELL * ROWS;  // 660
 
 const canvas = document.getElementById('canvas');
 canvas.width = W;
 canvas.height = H;
 const ctx = canvas.getContext('2d');
 
-// Path definition (col, row)
+// Path definition (col, row) — redesigned for 18×15 grid
 const PATH = [
-  [0,2],[1,2],[2,2],[3,2],[3,3],[3,4],[3,5],[3,6],
-  [4,6],[5,6],[6,6],[7,6],[7,5],[7,4],[7,3],[7,2],[7,1],[7,0],
-  [8,0],[9,0],[10,0],[11,0],[11,1],[11,2],[11,3],[11,4],[11,5],[11,6],[11,7],[11,8],
-  [10,8],[9,8],[8,8],[7,8],[6,8],[5,8],[4,8],[4,9],[4,10],[4,11],[4,12],
-  [5,12],[6,12],[7,12],[8,12],[9,12],[10,12],[11,12],[12,12],[13,12],[14,12],
-  [14,11],[14,10],[14,9],[14,8],[14,7],[14,6],[14,5],[14,4],[14,3],[14,2],[14,1],
+  [0,2],[1,2],[2,2],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7],
+  [4,7],[5,7],[6,7],[7,7],[7,6],[7,5],[7,4],[7,3],[7,2],[7,1],[7,0],
+  [8,0],[9,0],[10,0],[11,0],[11,1],[11,2],[11,3],[11,4],[11,5],[11,6],[11,7],[11,8],[11,9],[11,10],
+  [10,10],[9,10],[8,10],[7,10],[6,10],[5,10],[4,10],[4,11],[4,12],[4,13],[4,14],
+  [5,14],[6,14],[7,14],[8,14],[9,14],[10,14],[11,14],[12,14],[13,14],[14,14],
+  [14,13],[14,12],[14,11],[14,10],[14,9],[14,8],[14,7],[14,6],[14,5],[14,4],[14,3],[14,2],[14,1],
   [15,1],[16,1],[17,1]
 ];
 
@@ -183,9 +192,14 @@ let state = {
   wave: 1, waveActive: false,
   towers: [], enemies: [], bullets: [], effects: [],
   selectedType: 'basic',
+  selectedTower: null,      // tower whose range is being displayed
   spawnQueue: [], spawnTimer: 0,
   hoverCell: null,
+  countdown: 0,             // ms until auto wave start (real-time)
+  countdownActive: false,
 };
+
+const startBtn = document.getElementById('start-btn');
 
 function cellCenter(c, r) {
   return { x: c * CELL + CELL / 2, y: r * CELL + CELL / 2 };
@@ -230,10 +244,14 @@ function buildWaveQueue(wave) {
 
 function startWave() {
   if (state.waveActive) return;
+  state.countdownActive = false;
+  state.countdown = 0;
   state.waveActive = true;
   state.spawnQueue = buildWaveQueue(state.wave);
   state.spawnTimer = 0;
-  document.getElementById('start-btn').disabled = true;
+  startBtn.disabled = true;
+  startBtn.textContent = 'Start Wave';
+  startBtn.classList.remove('countdown');
   setMsg('');
 }
 
@@ -254,13 +272,24 @@ function getCanvasCoords(clientX, clientY) {
   };
 }
 
-function placeTowerAt(clientX, clientY) {
+function handleTap(clientX, clientY) {
   const { mx, my } = getCanvasCoords(clientX, clientY);
   const col = Math.floor(mx / CELL);
   const row = Math.floor(my / CELL);
   if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+
+  // Tap on existing tower → toggle range display
+  const existing = state.towers.find(t => t.col === col && t.row === row);
+  if (existing) {
+    state.selectedTower = (state.selectedTower === existing) ? null : existing;
+    return;
+  }
+
+  // Tap elsewhere → deselect tower
+  state.selectedTower = null;
+
+  // Try to place a new tower
   if (PATH_SET.has(`${col},${row}`)) return;
-  if (state.towers.find(t => t.col === col && t.row === row)) return;
   const def = TOWER_DEFS[state.selectedType];
   if (state.gold < def.cost) { setMsg('Gold not enough!'); return; }
   state.gold -= def.cost;
@@ -274,7 +303,7 @@ function placeTowerAt(clientX, clientY) {
 }
 
 // Mouse events
-canvas.addEventListener('click', e => placeTowerAt(e.clientX, e.clientY));
+canvas.addEventListener('click', e => handleTap(e.clientX, e.clientY));
 
 canvas.addEventListener('mousemove', e => {
   const { mx, my } = getCanvasCoords(e.clientX, e.clientY);
@@ -288,7 +317,7 @@ canvas.addEventListener('touchstart', e => {
   const touch = e.touches[0];
   const { mx, my } = getCanvasCoords(touch.clientX, touch.clientY);
   state.hoverCell = { col: Math.floor(mx / CELL), row: Math.floor(my / CELL) };
-  placeTowerAt(touch.clientX, touch.clientY);
+  handleTap(touch.clientX, touch.clientY);
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
@@ -308,7 +337,7 @@ document.querySelectorAll('.tower-btn').forEach(btn => {
   });
 });
 
-document.getElementById('start-btn').addEventListener('click', startWave);
+startBtn.addEventListener('click', startWave);
 
 const SPEEDS = [1, 2, 3];
 let speedIdx = 0;
@@ -320,18 +349,35 @@ speedBtn.addEventListener('click', () => {
   speedBtn.classList.toggle('active', gameSpeed > 1);
 });
 
-// Game loop
+// Game loop — rawDt is wall-clock ms, dt is game-speed-scaled ms
 let lastTime = 0;
 function loop(ts) {
-  const dt = Math.min(ts - lastTime, 100) * gameSpeed;
+  const rawDt = Math.min(ts - lastTime, 100);
+  const dt = rawDt * gameSpeed;
   lastTime = ts;
-  update(dt);
+  update(dt, rawDt);
   draw();
   requestAnimationFrame(loop);
 }
 
-function update(dt) {
+let _lastCountdownSec = -1;
+
+function update(dt, rawDt) {
   if (state.lives <= 0) return;
+
+  // Countdown timer runs in real-time, independent of game speed
+  if (state.countdownActive && !state.waveActive) {
+    state.countdown -= rawDt;
+    const secs = Math.max(0, Math.ceil(state.countdown / 1000));
+    if (secs !== _lastCountdownSec) {
+      _lastCountdownSec = secs;
+      startBtn.textContent = `Start Wave (${secs}s)`;
+    }
+    if (state.countdown <= 0) {
+      state.countdownActive = false;
+      startWave();
+    }
+  }
 
   // Spawn enemies
   if (state.waveActive && state.spawnQueue.length > 0) {
@@ -345,9 +391,15 @@ function update(dt) {
   if (state.waveActive && state.spawnQueue.length === 0 && state.enemies.length === 0) {
     state.waveActive = false;
     state.wave++;
-    state.gold += 30 + state.wave * 5;
-    setMsg(`Wave ${state.wave - 1} cleared! +${30 + (state.wave) * 5}G bonus`);
-    document.getElementById('start-btn').disabled = false;
+    const bonus = 30 + state.wave * 5;
+    state.gold += bonus;
+    setMsg(`Wave ${state.wave - 1} cleared! +${bonus}G bonus`);
+    startBtn.disabled = false;
+    // Start countdown for next wave
+    state.countdown = 15000;
+    state.countdownActive = true;
+    _lastCountdownSec = -1;
+    startBtn.classList.add('countdown');
     updateUI();
   }
 
@@ -384,7 +436,6 @@ function update(dt) {
     const def = TOWER_DEFS[tower.type];
     if (tower.timer < def.fireRate) return;
 
-    // Find target: enemy furthest along path
     const inRange = state.enemies.filter(en =>
       dist({ x: tower.cx, y: tower.cy }, en) <= def.range * CELL
     );
@@ -472,11 +523,7 @@ function draw() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       const key = `${c},${r}`;
-      if (PATH_SET.has(key)) {
-        ctx.fillStyle = '#2a3a2a';
-      } else {
-        ctx.fillStyle = '#1a2a1a';
-      }
+      ctx.fillStyle = PATH_SET.has(key) ? '#2a3a2a' : '#1a2a1a';
       ctx.fillRect(c * CELL, r * CELL, CELL, CELL);
       ctx.strokeStyle = '#223';
       ctx.lineWidth = 0.5;
@@ -495,7 +542,7 @@ function draw() {
   });
   ctx.stroke();
 
-  // Start / End markers (icons only)
+  // Start / End markers
   const s = PATH[0], e = PATH[PATH.length - 1];
   ctx.fillStyle = '#4f8';
   ctx.beginPath();
@@ -526,16 +573,36 @@ function draw() {
     }
   }
 
+  // Selected tower range (drawn before towers so tower renders on top)
+  if (state.selectedTower) {
+    const t = state.selectedTower;
+    const def = TOWER_DEFS[t.type];
+    ctx.save();
+    ctx.fillStyle = def.color + '18';
+    ctx.beginPath();
+    ctx.arc(t.cx, t.cy, def.range * CELL, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = def.color + 'aa';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7, 5]);
+    ctx.beginPath();
+    ctx.arc(t.cx, t.cy, def.range * CELL, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
   // Towers
   state.towers.forEach(tower => {
     const def = TOWER_DEFS[tower.type];
+    const isSelected = tower === state.selectedTower;
     const x = tower.cx, y = tower.cy;
     const hs = CELL * 0.38;
 
     ctx.fillStyle = '#334';
     ctx.fillRect(x - hs, y - hs, hs*2, hs*2);
-    ctx.strokeStyle = def.color;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isSelected ? '#fff' : def.color;
+    ctx.lineWidth = isSelected ? 3 : 2;
     ctx.strokeRect(x - hs, y - hs, hs*2, hs*2);
 
     ctx.fillStyle = def.color;
