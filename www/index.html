@@ -45,6 +45,12 @@
     .stage-card .card-meta { font-size: 0.6rem; color: #adf; line-height: 1.6; }
     .stage-card .card-best { font-size: 0.6rem; color: #4fa; margin-top: 4px; }
     .stage-card .card-lock-label { font-size: 0.58rem; color: #666; margin-top: 3px; }
+    .stage-card.coming-soon {
+      opacity: 0.5; cursor: default; pointer-events: none;
+      border-color: #333; border-style: dashed;
+    }
+    .stage-card.coming-soon .card-icon { opacity: 0.6; }
+    .stage-card.coming-soon .card-name { color: #777; letter-spacing: 1px; }
 
     /* ── Result Screen ── */
     #screen-result { min-height: 80dvh; justify-content: center; gap: 16px; text-align: center; }
@@ -153,7 +159,7 @@
 <!-- ── Stage Select ── -->
 <div id="screen-select" class="screen active">
   <h2>Tower Defense</h2>
-  <div class="subtitle">ステージを選択</div>
+  <div class="subtitle">Select a Stage</div>
   <div id="stage-cards"></div>
 </div>
 
@@ -188,21 +194,21 @@
       Basic<span class="cost">50G | DMG:12 SPD:1.1s</span>
     </button>
     <button class="tower-btn" data-type="sniper">
-      Sniper<span class="cost">80G | DMG:50 RNG:4 対Tank</span>
+      Sniper<span class="cost">80G | DMG:50 RNG:4 Anti-Tank</span>
     </button>
     <button class="tower-btn" data-type="rapid">
       Rapid<span class="cost">70G | DMG:6 SPD:0.4s STUN</span>
     </button>
     <button class="tower-btn" data-type="slow">
-      Freeze<span class="cost">60G | 3体AOE鈍足 RNG:3.5</span>
+      Freeze<span class="cost">60G | 3x AOE Slow RNG:3.5</span>
     </button>
     <button class="tower-btn" data-type="bomb">
-      Bomb<span class="cost">100G | DMG:28 AOE鈍足</span>
+      Bomb<span class="cost">100G | DMG:28 AOE Slow</span>
     </button>
   </div>
   <div id="tower-actions" style="display:none;">
-    <button id="upgrade-btn" class="action-btn upgrade">強化</button>
-    <button id="abolish-btn" class="action-btn">廃止 50%返金</button>
+    <button id="upgrade-btn" class="action-btn upgrade">Upgrade</button>
+    <button id="abolish-btn" class="action-btn">Sell (50%)</button>
   </div>
   <div id="msg"></div>
 </div>
@@ -778,11 +784,21 @@ function renderStageSelect() {
       <div class="card-name">${stage.name}</div>
       <div class="card-meta">${stage.waves} Waves<br>${stage.diffLabel}</div>
       ${cleared ? `<div class="card-best">★ ${best.toLocaleString()}</div>` : ''}
-      ${!unlocked ? `<div class="card-lock-label">前のステージをクリア</div>` : ''}
+      ${!unlocked ? `<div class="card-lock-label">Clear previous stage</div>` : ''}
     `;
     if (unlocked) card.addEventListener('click', () => loadStage(stage.id));
     container.appendChild(card);
   });
+
+  const comingSoon = document.createElement('div');
+  comingSoon.className = 'stage-card coming-soon';
+  comingSoon.innerHTML = `
+    <div class="card-num">NEXT</div>
+    <div class="card-icon">✦</div>
+    <div class="card-name">Coming Soon</div>
+    <div class="card-meta">New stage<br>in preparation</div>
+  `;
+  container.appendChild(comingSoon);
 }
 
 // ─── Load Stage ───────────────────────────────────────────────────────
@@ -877,8 +893,8 @@ function spawnEnemy(type) {
   const base = {
     basic:  { hp: 60,   spd: 1.2, color: '#f88', reward: 10,  size: 10, shape: 'circle'  },
     fast:   { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8,  shape: 'diamond' },
-    tank:   { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 14, shape: 'square'  },
-    boss:   { hp: 1000, spd: 0.5, color: '#f4f', reward: 100, size: 18, shape: 'star'    },
+    tank:   { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 10, shape: 'square'  },
+    boss:   { hp: 1000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
   }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
   const hp = Math.round(base.hp * stage.difficulty);
   const start = PATH[0];
@@ -935,10 +951,10 @@ function updateUI() {
     const canUpgrade = t.level < MAX_TOWER_LEVEL;
     if (canUpgrade) {
       const cost = getUpgradeCost(t);
-      upgradeBtn.textContent = `強化 Lv.${t.level + 1} ${cost}G`;
+      upgradeBtn.textContent = `Upgrade Lv.${t.level + 1} ${cost}G`;
       upgradeBtn.disabled = state.gold < cost;
     } else {
-      upgradeBtn.textContent = '強化 MAX';
+      upgradeBtn.textContent = 'Upgrade MAX';
       upgradeBtn.disabled = true;
     }
     setMsg(`${TOWER_DEFS[t.type].name} Lv.${t.level} | DMG:${def.dmg} RNG:${def.range.toFixed(1)} SPD:${(def.fireRate/1000).toFixed(2)}s`);
@@ -1351,12 +1367,10 @@ function draw() {
 
   // draw ropes from freeze towers to slowed enemies
   state.towers.filter(t => t.type === 'slow').forEach(tower => {
-    const ropeRange = TOWERS.slow.range * CELL * 1.3;
+    const ropeRange = TOWER_DEFS.slow.range * CELL * 1.3;
     state.enemies.filter(en => en.slowTimer > 0).forEach(en => {
       if (Math.hypot(en.x - tower.cx, en.y - tower.cy) > ropeRange) return;
       const alpha = Math.min(0.85, en.slowTimer / 800);
-      const mx = (tower.cx + en.x) / 2 + (en.y - tower.cy) * 0.18;
-      const my = (tower.cy + en.y) / 2 - (en.x - tower.cx) * 0.18;
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = '#99f';
@@ -1364,7 +1378,7 @@ function draw() {
       ctx.setLineDash([4, 3]);
       ctx.beginPath();
       ctx.moveTo(tower.cx, tower.cy);
-      ctx.quadraticCurveTo(mx, my, en.x, en.y);
+      ctx.lineTo(en.x, en.y);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.restore();
