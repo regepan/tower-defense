@@ -875,11 +875,11 @@ function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function spawnEnemy(type) {
   const stage = STAGES[state.stageId];
   const base = {
-    basic:  { hp: 60,   spd: 1.2, color: '#f88', reward: 10,  size: 10 },
-    fast:   { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8  },
-    tank:   { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 14 },
-    boss:   { hp: 1000, spd: 0.5, color: '#f4f', reward: 100, size: 18 },
-  }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10 };
+    basic:  { hp: 60,   spd: 1.2, color: '#f88', reward: 10,  size: 10, shape: 'circle'  },
+    fast:   { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8,  shape: 'diamond' },
+    tank:   { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 14, shape: 'square'  },
+    boss:   { hp: 1000, spd: 0.5, color: '#f4f', reward: 100, size: 18, shape: 'star'    },
+  }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
   const hp = Math.round(base.hp * stage.difficulty);
   const start = PATH[0];
   return {
@@ -1181,7 +1181,7 @@ function update(dt, rawDt) {
     if (def.aoeFreeze) {
       const freezeTargets = inRange.slice(0, def.maxTargets);
       freezeTargets.forEach(en => hitEnemy(en, def.dmg, def.slow));
-      state.effects.push({ x: tower.cx, y: tower.cy, r: 0, startR: 0, maxR: def.range * CELL, life: 450, maxLife: 450, color: def.color, type: 'freeze' });
+      // no ring effect — rope visuals are drawn in render()
     } else if (def.aoe > 0) {
       state.bullets.push({
         x: tower.cx, y: tower.cy, tx: target.x, ty: target.y,
@@ -1349,14 +1349,98 @@ function draw() {
     }
   });
 
+  // draw ropes from freeze towers to slowed enemies
+  state.towers.filter(t => t.type === 'slow').forEach(tower => {
+    const ropeRange = TOWERS.slow.range * CELL * 1.3;
+    state.enemies.filter(en => en.slowTimer > 0).forEach(en => {
+      if (Math.hypot(en.x - tower.cx, en.y - tower.cy) > ropeRange) return;
+      const alpha = Math.min(0.85, en.slowTimer / 800);
+      const mx = (tower.cx + en.x) / 2 + (en.y - tower.cy) * 0.18;
+      const my = (tower.cy + en.y) / 2 - (en.x - tower.cx) * 0.18;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#99f';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(tower.cx, tower.cy);
+      ctx.quadraticCurveTo(mx, my, en.x, en.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    });
+  });
+
   state.enemies.forEach(en => {
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
     ctx.ellipse(en.x, en.y + en.size * 0.8, en.size * 0.7, en.size * 0.3, 0, 0, Math.PI*2);
     ctx.fill();
+
     ctx.fillStyle = en.slowTimer > 0 ? '#aaf' : en.color;
-    ctx.beginPath(); ctx.arc(en.x, en.y, en.size, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+
+    const shape = en.shape || 'circle';
+    if (shape === 'diamond') {
+      let angle = 0;
+      const next = PATH[en.pathIdx + 1];
+      if (next) {
+        angle = Math.atan2(next[1] * CELL + CELL/2 - en.y, next[0] * CELL + CELL/2 - en.x) - Math.PI/2;
+      }
+      ctx.save();
+      ctx.translate(en.x, en.y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, -en.size);
+      ctx.lineTo(en.size * 0.65, 0);
+      ctx.lineTo(0, en.size);
+      ctx.lineTo(-en.size * 0.65, 0);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    } else if (shape === 'square') {
+      const s = en.size * 0.9;
+      ctx.beginPath();
+      ctx.rect(en.x - s, en.y - s, s * 2, s * 2);
+      ctx.fill(); ctx.stroke();
+    } else if (shape === 'star') {
+      const rot = (lastTime / 300) % (Math.PI * 2);
+      ctx.save();
+      ctx.translate(en.x, en.y);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? en.size : en.size * 0.45;
+        const a = (i * Math.PI / 5) - Math.PI / 2;
+        if (i === 0) ctx.moveTo(r * Math.cos(a), r * Math.sin(a));
+        else ctx.lineTo(r * Math.cos(a), r * Math.sin(a));
+      }
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.beginPath(); ctx.arc(en.x, en.y, en.size, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+
+    if (en.slowTimer > 0) {
+      const ropeAlpha = Math.min(0.9, en.slowTimer / 600);
+      ctx.save();
+      ctx.strokeStyle = '#66f';
+      ctx.lineWidth = 1.8;
+      ctx.globalAlpha = ropeAlpha;
+      const r = en.size + 3;
+      const segs = 5;
+      for (let i = 0; i < segs; i++) {
+        const a1 = (i / segs) * Math.PI * 2 - Math.PI / 2;
+        const a2 = ((i + 0.55) / segs) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(en.x, en.y, r, a1, a2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     const bw = en.size * 2.2, bh = 4;
     const bx = en.x - bw / 2, by = en.y - en.size - 7;
     ctx.fillStyle = '#400'; ctx.fillRect(bx, by, bw, bh);
@@ -1374,8 +1458,6 @@ function draw() {
     const progress = 1 - ef.life / ef.maxLife;
     if (ef.type === 'upgrade') {
       alpha = Math.sin(Math.PI * progress);
-    } else if (ef.type === 'freeze') {
-      alpha = Math.sin(Math.PI * progress) * 0.8;
     } else {
       alpha = ef.life / 300;
     }
