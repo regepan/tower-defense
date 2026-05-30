@@ -185,19 +185,19 @@
   <canvas id="canvas"></canvas>
   <div id="panel">
     <button class="tower-btn selected" data-type="basic">
-      Basic<span class="cost">50G | DMG:10 SPD:1.2s</span>
+      Basic<span class="cost">50G | DMG:12 SPD:1.1s</span>
     </button>
     <button class="tower-btn" data-type="sniper">
-      Sniper<span class="cost">80G | DMG:40 SPD:3s</span>
+      Sniper<span class="cost">80G | DMG:50 RNG:4 対Tank</span>
     </button>
     <button class="tower-btn" data-type="rapid">
-      Rapid<span class="cost">70G | DMG:5 SPD:0.4s</span>
+      Rapid<span class="cost">70G | DMG:6 SPD:0.4s STUN</span>
     </button>
     <button class="tower-btn" data-type="slow">
-      Freeze<span class="cost">60G | DMG:3 SLOW</span>
+      Freeze<span class="cost">60G | 3体AOE鈍足 RNG:3.5</span>
     </button>
     <button class="tower-btn" data-type="bomb">
-      Bomb<span class="cost">100G | DMG:30 AOE</span>
+      Bomb<span class="cost">100G | DMG:28 AOE鈍足</span>
     </button>
   </div>
   <div id="tower-actions" style="display:none;">
@@ -839,18 +839,19 @@ function getEffectiveDef(tower) {
   const lv = tower.level - 1;
   return {
     ...base,
-    dmg:      Math.round(base.dmg * Math.pow(1.5, lv)),
-    range:    base.range * Math.pow(1.1, lv),
-    fireRate: Math.round(base.fireRate * Math.pow(0.85, lv)),
+    dmg:        Math.round(base.dmg * Math.pow(1.5, lv)),
+    range:      base.range * Math.pow(1.1, lv),
+    fireRate:   Math.round(base.fireRate * Math.pow(0.85, lv)),
+    maxTargets: base.maxTargets != null ? base.maxTargets + lv : undefined,
   };
 }
 
 const TOWER_DEFS = {
-  basic:  { name:'Basic',  color:'#4af', cost:50,  dmg:10,  range:2.5, fireRate:1200, aoe:0 },
-  sniper: { name:'Sniper', color:'#f84', cost:80,  dmg:40,  range:5,   fireRate:3000, aoe:0 },
-  rapid:  { name:'Rapid',  color:'#4fa', cost:70,  dmg:5,   range:2,   fireRate:400,  aoe:0 },
-  slow:   { name:'Freeze', color:'#88f', cost:60,  dmg:3,   range:2.5, fireRate:1000, aoe:0, slow:0.4 },
-  bomb:   { name:'Bomb',   color:'#f44', cost:100, dmg:30,  range:3,   fireRate:2000, aoe:1.2 },
+  basic:  { name:'Basic',  color:'#4af', cost:50,  dmg:12,  range:2.5, fireRate:1100, aoe:0 },
+  sniper: { name:'Sniper', color:'#f84', cost:80,  dmg:50,  range:4,   fireRate:3500, aoe:0, targetMode:'tank' },
+  rapid:  { name:'Rapid',  color:'#4fa', cost:70,  dmg:6,   range:2.5, fireRate:380,  aoe:0, slow:600 },
+  slow:   { name:'Freeze', color:'#88f', cost:60,  dmg:4,   range:3.5, fireRate:1500, aoe:0, slow:2500, aoeFreeze:true, maxTargets:3 },
+  bomb:   { name:'Bomb',   color:'#f44', cost:100, dmg:28,  range:3.2, fireRate:1800, aoe:1.5, slow:900 },
 };
 
 let gameSpeed = 1;
@@ -1098,7 +1099,7 @@ function update(dt, rawDt) {
   if (state.gameEnded) return;
 
   if (state.countdownActive && !state.waveActive) {
-    state.countdown -= rawDt;
+    state.countdown -= dt;
     const secs = Math.max(0, Math.ceil(state.countdown / 1000));
     if (secs !== _lastCountdownSec) {
       _lastCountdownSec = secs;
@@ -1170,10 +1171,18 @@ function update(dt, rawDt) {
       dist({ x: tower.cx, y: tower.cy }, en) <= def.range * CELL
     );
     if (inRange.length === 0) return;
-    inRange.sort((a, b) => b.pathIdx - a.pathIdx);
+    if (def.targetMode === 'tank') {
+      inRange.sort((a, b) => b.hp - a.hp);
+    } else {
+      inRange.sort((a, b) => b.pathIdx - a.pathIdx);
+    }
     const target = inRange[0];
     tower.timer = 0;
-    if (def.aoe > 0) {
+    if (def.aoeFreeze) {
+      const freezeTargets = inRange.slice(0, def.maxTargets);
+      freezeTargets.forEach(en => hitEnemy(en, def.dmg, def.slow));
+      state.effects.push({ x: tower.cx, y: tower.cy, r: 0, startR: 0, maxR: def.range * CELL, life: 450, maxLife: 450, color: def.color, type: 'freeze' });
+    } else if (def.aoe > 0) {
       state.bullets.push({
         x: tower.cx, y: tower.cy, tx: target.x, ty: target.y,
         spd: 4, dmg: def.dmg, aoe: def.aoe * CELL,
@@ -1226,9 +1235,9 @@ function update(dt, rawDt) {
   state.enemies = state.enemies.filter(en => en.hp > 0);
 }
 
-function hitEnemy(en, dmg, slow) {
+function hitEnemy(en, dmg, slowMs) {
   en.hp -= dmg;
-  if (slow) en.slowTimer = 2000;
+  if (slowMs) en.slowTimer = Math.max(en.slowTimer, slowMs);
   if (en.hp <= 0) {
     state.gold += en.reward;
     state.score += en.reward;
@@ -1362,15 +1371,20 @@ function draw() {
 
   state.effects.forEach(ef => {
     let alpha;
+    const progress = 1 - ef.life / ef.maxLife;
     if (ef.type === 'upgrade') {
-      const progress = 1 - ef.life / ef.maxLife;
       alpha = Math.sin(Math.PI * progress);
+    } else if (ef.type === 'freeze') {
+      alpha = Math.sin(Math.PI * progress) * 0.8;
     } else {
       alpha = ef.life / 300;
     }
-    ctx.strokeStyle = ef.color + Math.floor(Math.min(1, alpha) * 255).toString(16).padStart(2, '0');
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, alpha);
+    ctx.strokeStyle = ef.color;
     ctx.lineWidth = ef.type === 'upgrade' ? 3 : 2;
     ctx.beginPath(); ctx.arc(ef.x, ef.y, ef.r, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
   });
 
   if (state.gameEnded) {
