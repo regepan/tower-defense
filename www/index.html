@@ -29,7 +29,13 @@
       color: #4af; letter-spacing: 4px; text-transform: uppercase;
     }
     #screen-select .subtitle { font-size: clamp(0.7rem, 2vw, 0.85rem); color: #888; }
-    #stage-cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); width: 100%; }
+    #stage-cards { display: flex; flex-direction: column; gap: 24px; width: 100%; }
+    .stage-section-title {
+      font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+      color: #fa4; letter-spacing: 3px; text-transform: uppercase;
+      border-bottom: 1px solid #333; padding-bottom: 6px; margin-bottom: 10px;
+    }
+    .stage-section-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); }
     .stage-card {
       padding: 10px 8px;
       border: 2px solid #444; border-radius: 8px;
@@ -429,6 +435,96 @@ const STAGE_PATHS = {
     [15,0],[16,0],[17,0],
     [17,1],[17,2],[17,3],[17,4],[17,5],[17,6],[17,7],
   ],
+  // Inferno: 3-spike comb, enter top-left, exit bottom-right
+  inferno: [
+    [0,0],[1,0],[2,0],[3,0],
+    [3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],[3,10],
+    [4,10],[5,10],[6,10],[7,10],
+    [7,9],[7,8],[7,7],[7,6],[7,5],[7,4],[7,3],[7,2],[7,1],[7,0],
+    [8,0],[9,0],[10,0],[11,0],[12,0],
+    [12,1],[12,2],[12,3],[12,4],[12,5],[12,6],[12,7],[12,8],[12,9],[12,10],[12,11],[12,12],[12,13],[12,14],
+    [13,14],[14,14],[15,14],[16,14],[17,14],
+  ],
+  // Void: hourglass shape, enter left-mid, exit bottom-right
+  void: [
+    [0,7],[1,7],[2,7],[3,7],[4,7],
+    [4,6],[4,5],[4,4],[4,3],[4,2],[4,1],[4,0],
+    [5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0],[14,0],
+    [14,1],[14,2],[14,3],[14,4],[14,5],[14,6],[14,7],[14,8],
+    [13,8],[12,8],[11,8],[10,8],[9,8],[8,8],[7,8],[6,8],[5,8],
+    [5,9],[5,10],[5,11],[5,12],[5,13],[5,14],
+    [6,14],[7,14],[8,14],[9,14],[10,14],[11,14],[12,14],[13,14],[14,14],[15,14],[16,14],[17,14],
+  ],
+  // Nexus: backward C then L, enter top-center, exit bottom-right
+  nexus: [
+    [9,0],[8,0],[7,0],[6,0],[5,0],[4,0],[3,0],[2,0],[1,0],[0,0],
+    [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],
+    [1,8],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],[8,8],[9,8],
+    [9,7],[9,6],[9,5],[9,4],[9,3],[9,2],[9,1],
+    [10,1],[11,1],[12,1],[13,1],[14,1],[15,1],[16,1],[17,1],
+    [17,2],[17,3],[17,4],[17,5],[17,6],[17,7],[17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+  ],
+  // Labyrinth: bottom entry, reverse-S multi-turn, exit right
+  labyrinth: [
+    [0,14],[1,14],[2,14],[3,14],[4,14],[5,14],[6,14],[7,14],[8,14],[9,14],
+    [9,13],[9,12],[9,11],[9,10],[9,9],
+    [8,9],[7,9],[6,9],[5,9],[4,9],[3,9],
+    [3,8],[3,7],[3,6],[3,5],
+    [4,5],[5,5],[6,5],[7,5],[8,5],[9,5],[10,5],[11,5],[12,5],[13,5],[14,5],[15,5],
+    [15,4],[15,3],[15,2],[15,1],[15,0],
+    [16,0],[17,0],
+    [17,1],[17,2],[17,3],[17,4],[17,5],[17,6],[17,7],[17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+  ],
+  // Fortress: large U-shape, enter top-right, exit bottom-right
+  fortress: [
+    [17,0],[16,0],[15,0],[14,0],[13,0],[12,0],[11,0],[10,0],[9,0],[8,0],[7,0],[6,0],[5,0],[4,0],[3,0],[2,0],[1,0],[0,0],
+    [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],
+    [1,7],[2,7],[3,7],[4,7],[5,7],[6,7],[7,7],[8,7],[9,7],[10,7],[11,7],[12,7],[13,7],[14,7],[15,7],[16,7],[17,7],
+    [17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+  ],
+  // Shadow: left column up then right sweep then right column down, exit right-bottom
+  shadow: [
+    [0,14],[0,13],[0,12],[0,11],[0,10],[0,9],[0,8],[0,7],[0,6],[0,5],[0,4],[0,3],[0,2],[0,1],[0,0],
+    [1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0],
+    [13,1],[13,2],[13,3],[13,4],[13,5],[13,6],[13,7],[13,8],[13,9],[13,10],[13,11],[13,12],[13,13],[13,14],
+    [14,14],[15,14],[16,14],[17,14],
+  ],
+  // Tempest: full outer rectangle CCW, enter top-left, exit left side
+  tempest: [
+    [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0],[14,0],[15,0],[16,0],[17,0],
+    [17,1],[17,2],[17,3],[17,4],[17,5],[17,6],[17,7],[17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+    [16,14],[15,14],[14,14],[13,14],[12,14],[11,14],[10,14],[9,14],[8,14],[7,14],[6,14],[5,14],[4,14],[3,14],[2,14],[1,14],[0,14],
+    [0,13],[0,12],[0,11],[0,10],[0,9],[0,8],[0,7],[0,6],[0,5],[0,4],[0,3],[0,2],[0,1],
+  ],
+  // Chaos: multi-column zigzag, enter left, exit bottom-right
+  chaos: [
+    [0,2],[1,2],[2,2],[3,2],
+    [3,3],[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],[3,10],[3,11],
+    [4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11],[11,11],
+    [11,10],[11,9],[11,8],[11,7],[11,6],[11,5],[11,4],[11,3],[11,2],[11,1],[11,0],
+    [12,0],[13,0],[14,0],[15,0],[16,0],[17,0],
+    [17,1],[17,2],[17,3],[17,4],[17,5],[17,6],[17,7],[17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+  ],
+  // Zenith: double-peak spikes, enter bottom-left, exit bottom-right
+  zenith: [
+    [0,14],[1,14],[2,14],[3,14],[4,14],[5,14],
+    [5,13],[5,12],[5,11],[5,10],[5,9],[5,8],[5,7],[5,6],[5,5],[5,4],[5,3],[5,2],[5,1],[5,0],
+    [6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [11,1],[11,2],[11,3],[11,4],[11,5],[11,6],[11,7],[11,8],[11,9],[11,10],[11,11],[11,12],[11,13],[11,14],
+    [12,14],[13,14],[14,14],[15,14],[16,14],[17,14],
+  ],
+  // Omega: maximum-complexity multi-loop, enter left-mid, exit bottom-mid
+  omega: [
+    [0,7],[1,7],[2,7],[3,7],[4,7],[5,7],[6,7],[7,7],[8,7],[9,7],[10,7],
+    [10,6],[10,5],[10,4],[10,3],[10,2],[10,1],[10,0],
+    [11,0],[12,0],[13,0],[14,0],[15,0],[16,0],[17,0],
+    [17,1],[17,2],[17,3],[17,4],[17,5],[17,6],[17,7],[17,8],[17,9],[17,10],[17,11],[17,12],[17,13],[17,14],
+    [16,14],[15,14],[14,14],[13,14],[12,14],[11,14],[10,14],[9,14],[8,14],[7,14],[6,14],
+    [6,13],[6,12],[6,11],[6,10],[6,9],[6,8],
+    [5,8],[4,8],[3,8],[2,8],[1,8],[0,8],
+    [0,9],[0,10],[0,11],[0,12],[0,13],[0,14],
+    [1,14],[2,14],[3,14],[4,14],[5,14],
+  ],
 };
 
 // ─── Stage Configurations ─────────────────────────────────────────────
@@ -583,18 +679,19 @@ const STAGES = [
     cellColor: '#040006',
     pathCellColor: '#120028',
     pathLineColor: '#400080',
+    bossStage: true,
   },
   {
     id: 10,
     name: 'Meadow',
     icon: '🌾',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'meadow',
-    waves: 10,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.6,
-    waveOffset: 0,
+    waves: 12,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.1,
+    waveOffset: 2,
     cellColor: '#071004',
     pathCellColor: '#183a0a',
     pathLineColor: '#3e8018',
@@ -603,13 +700,13 @@ const STAGES = [
     id: 11,
     name: 'Cave',
     icon: '🦇',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'cave',
-    waves: 10,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.65,
-    waveOffset: 0,
+    waves: 12,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.15,
+    waveOffset: 2,
     cellColor: '#060606',
     pathCellColor: '#20180e',
     pathLineColor: '#5a4428',
@@ -618,13 +715,13 @@ const STAGES = [
     id: 12,
     name: 'Glacier',
     icon: '🧊',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'glacier',
-    waves: 10,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.7,
-    waveOffset: 0,
+    waves: 14,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.2,
+    waveOffset: 3,
     cellColor: '#040e18',
     pathCellColor: '#0c2640',
     pathLineColor: '#2070b8',
@@ -633,13 +730,13 @@ const STAGES = [
     id: 13,
     name: 'Savanna',
     icon: '🦁',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'savanna',
-    waves: 12,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.75,
-    waveOffset: 1,
+    waves: 14,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.25,
+    waveOffset: 3,
     cellColor: '#140c00',
     pathCellColor: '#342000',
     pathLineColor: '#8c5000',
@@ -648,13 +745,13 @@ const STAGES = [
     id: 14,
     name: 'Jungle',
     icon: '🌴',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'jungle',
-    waves: 12,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.8,
-    waveOffset: 1,
+    waves: 14,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.3,
+    waveOffset: 3,
     cellColor: '#030804',
     pathCellColor: '#0e2c10',
     pathLineColor: '#206a24',
@@ -663,13 +760,13 @@ const STAGES = [
     id: 15,
     name: 'Reef',
     icon: '🐠',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'reef',
-    waves: 12,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.85,
-    waveOffset: 1,
+    waves: 15,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.35,
+    waveOffset: 3,
     cellColor: '#000c10',
     pathCellColor: '#002438',
     pathLineColor: '#006880',
@@ -678,13 +775,13 @@ const STAGES = [
     id: 16,
     name: 'Mesa',
     icon: '🏜',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'mesa',
-    waves: 14,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.9,
-    waveOffset: 1,
+    waves: 16,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.4,
+    waveOffset: 4,
     cellColor: '#120500',
     pathCellColor: '#301400',
     pathLineColor: '#883200',
@@ -693,13 +790,13 @@ const STAGES = [
     id: 17,
     name: 'Bog',
     icon: '🐸',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'bog',
-    waves: 14,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 0.95,
-    waveOffset: 2,
+    waves: 16,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.45,
+    waveOffset: 4,
     cellColor: '#050c04',
     pathCellColor: '#122612',
     pathLineColor: '#2e6020',
@@ -708,13 +805,13 @@ const STAGES = [
     id: 18,
     name: 'Crater',
     icon: '🌑',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'crater',
-    waves: 15,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 1.0,
-    waveOffset: 2,
+    waves: 18,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.5,
+    waveOffset: 4,
     cellColor: '#080808',
     pathCellColor: '#242424',
     pathLineColor: '#585858',
@@ -723,16 +820,168 @@ const STAGES = [
     id: 19,
     name: 'Pinnacle',
     icon: '🗻',
-    diffLabel: 'Easy',
+    diffLabel: 'Middle',
     pathKey: 'pinnacle',
-    waves: 15,
-    startGold: 200,
-    startLives: 25,
-    difficulty: 1.0,
-    waveOffset: 2,
+    waves: 18,
+    startGold: 180,
+    startLives: 20,
+    difficulty: 1.5,
+    waveOffset: 4,
     cellColor: '#040008',
     pathCellColor: '#140040',
     pathLineColor: '#4000a8',
+    bossStage: true,
+  },
+  {
+    id: 20,
+    name: 'Inferno',
+    icon: '🔥',
+    diffLabel: 'Hard',
+    pathKey: 'inferno',
+    waves: 15,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.6,
+    waveOffset: 4,
+    cellColor: '#120200',
+    pathCellColor: '#3a0800',
+    pathLineColor: '#c03000',
+  },
+  {
+    id: 21,
+    name: 'Void',
+    icon: '🌌',
+    diffLabel: 'Hard',
+    pathKey: 'void',
+    waves: 15,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.65,
+    waveOffset: 4,
+    cellColor: '#02000c',
+    pathCellColor: '#0a0030',
+    pathLineColor: '#3000a0',
+  },
+  {
+    id: 22,
+    name: 'Nexus',
+    icon: '🔮',
+    diffLabel: 'Hard',
+    pathKey: 'nexus',
+    waves: 16,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.7,
+    waveOffset: 5,
+    cellColor: '#001014',
+    pathCellColor: '#002838',
+    pathLineColor: '#008090',
+  },
+  {
+    id: 23,
+    name: 'Labyrinth',
+    icon: '🗺',
+    diffLabel: 'Hard',
+    pathKey: 'labyrinth',
+    waves: 16,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.75,
+    waveOffset: 5,
+    cellColor: '#0e0800',
+    pathCellColor: '#2c1a00',
+    pathLineColor: '#7a4800',
+  },
+  {
+    id: 24,
+    name: 'Fortress',
+    icon: '🏰',
+    diffLabel: 'Hard',
+    pathKey: 'fortress',
+    waves: 18,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.8,
+    waveOffset: 5,
+    cellColor: '#06080e',
+    pathCellColor: '#14182c',
+    pathLineColor: '#404878',
+  },
+  {
+    id: 25,
+    name: 'Shadow',
+    icon: '🌑',
+    diffLabel: 'Hard',
+    pathKey: 'shadow',
+    waves: 18,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.85,
+    waveOffset: 5,
+    cellColor: '#04020a',
+    pathCellColor: '#100826',
+    pathLineColor: '#380870',
+  },
+  {
+    id: 26,
+    name: 'Tempest',
+    icon: '🌪',
+    diffLabel: 'Hard',
+    pathKey: 'tempest',
+    waves: 18,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.9,
+    waveOffset: 6,
+    cellColor: '#020610',
+    pathCellColor: '#081830',
+    pathLineColor: '#205080',
+  },
+  {
+    id: 27,
+    name: 'Chaos',
+    icon: '💢',
+    diffLabel: 'Hard',
+    pathKey: 'chaos',
+    waves: 20,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 1.95,
+    waveOffset: 6,
+    cellColor: '#100200',
+    pathCellColor: '#300800',
+    pathLineColor: '#a02000',
+  },
+  {
+    id: 28,
+    name: 'Zenith',
+    icon: '⚡',
+    diffLabel: 'Hard',
+    pathKey: 'zenith',
+    waves: 20,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 2.0,
+    waveOffset: 6,
+    cellColor: '#0e0a00',
+    pathCellColor: '#2c2200',
+    pathLineColor: '#887000',
+  },
+  {
+    id: 29,
+    name: 'Omega',
+    icon: '💥',
+    diffLabel: 'Hard',
+    pathKey: 'omega',
+    waves: 20,
+    startGold: 150,
+    startLives: 15,
+    difficulty: 2.0,
+    waveOffset: 6,
+    cellColor: '#0c0000',
+    pathCellColor: '#280000',
+    pathLineColor: '#900000',
+    bossStage: true,
   },
 ];
 
@@ -772,33 +1021,60 @@ function showScreen(name) {
 function renderStageSelect() {
   const container = document.getElementById('stage-cards');
   container.innerHTML = '';
+
+  const groups = [];
+  const groupMap = {};
   STAGES.forEach(stage => {
-    const unlocked = isUnlocked(stage.id);
-    const cleared = isCleared(stage.id);
-    const best = getBestScore(stage.id);
-    const card = document.createElement('div');
-    card.className = 'stage-card' + (cleared ? ' cleared' : '') + (unlocked ? '' : ' locked');
-    card.innerHTML = `
-      <div class="card-num">STAGE ${stage.id + 1}</div>
-      <div class="card-icon">${unlocked ? stage.icon : '🔒'}</div>
-      <div class="card-name">${stage.name}</div>
-      <div class="card-meta">${stage.waves} Waves<br>${stage.diffLabel}</div>
-      ${cleared ? `<div class="card-best">★ ${best.toLocaleString()}</div>` : ''}
-      ${!unlocked ? `<div class="card-lock-label">Clear previous stage</div>` : ''}
-    `;
-    if (unlocked) card.addEventListener('click', () => loadStage(stage.id));
-    container.appendChild(card);
+    if (!groupMap[stage.diffLabel]) {
+      groupMap[stage.diffLabel] = [];
+      groups.push({ label: stage.diffLabel, stages: groupMap[stage.diffLabel] });
+    }
+    groupMap[stage.diffLabel].push(stage);
   });
 
-  const comingSoon = document.createElement('div');
-  comingSoon.className = 'stage-card coming-soon';
-  comingSoon.innerHTML = `
-    <div class="card-num">NEXT</div>
-    <div class="card-icon">✦</div>
-    <div class="card-name">Coming Soon</div>
-    <div class="card-meta">New stage<br>in preparation</div>
-  `;
-  container.appendChild(comingSoon);
+  groups.forEach((group, gi) => {
+    const section = document.createElement('section');
+    const title = document.createElement('h3');
+    title.className = 'stage-section-title';
+    title.textContent = group.label;
+    section.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'stage-section-grid';
+
+    group.stages.forEach(stage => {
+      const unlocked = isUnlocked(stage.id);
+      const cleared = isCleared(stage.id);
+      const best = getBestScore(stage.id);
+      const card = document.createElement('div');
+      card.className = 'stage-card' + (cleared ? ' cleared' : '') + (unlocked ? '' : ' locked');
+      card.innerHTML = `
+        <div class="card-num">STAGE ${stage.id + 1}</div>
+        <div class="card-icon">${unlocked ? stage.icon : '🔒'}</div>
+        <div class="card-name">${stage.name}</div>
+        <div class="card-meta">${stage.waves} Waves</div>
+        ${cleared ? `<div class="card-best">★ ${best.toLocaleString()}</div>` : ''}
+        ${!unlocked ? `<div class="card-lock-label">Clear previous stage</div>` : ''}
+      `;
+      if (unlocked) card.addEventListener('click', () => loadStage(stage.id));
+      grid.appendChild(card);
+    });
+
+    if (gi === groups.length - 1) {
+      const comingSoon = document.createElement('div');
+      comingSoon.className = 'stage-card coming-soon';
+      comingSoon.innerHTML = `
+        <div class="card-num">NEXT</div>
+        <div class="card-icon">✦</div>
+        <div class="card-name">Coming Soon</div>
+        <div class="card-meta">New stage<br>in preparation</div>
+      `;
+      grid.appendChild(comingSoon);
+    }
+
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
 }
 
 // ─── Load Stage ───────────────────────────────────────────────────────
@@ -828,6 +1104,7 @@ function loadStage(stageId) {
     countdown: 0,
     countdownActive: false,
     gameEnded: false,
+    damageFlash: 0, screenShake: 0,
   };
 
   document.querySelectorAll('.tower-btn').forEach(b => b.classList.remove('selected'));
@@ -880,6 +1157,7 @@ let state = {
   selectedType: 'basic', selectedTower: null,
   spawnQueue: [], spawnTimer: 0,
   hoverCell: null, countdown: 0, countdownActive: false, gameEnded: false,
+  damageFlash: 0, screenShake: 0,
 };
 
 const startBtn = document.getElementById('start-btn');
@@ -893,10 +1171,12 @@ function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function spawnEnemy(type) {
   const stage = STAGES[state.stageId];
   const base = {
-    basic:  { hp: 60,   spd: 1.2, color: '#f88', reward: 10,  size: 10, shape: 'circle'  },
-    fast:   { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8,  shape: 'diamond' },
-    tank:   { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 10, shape: 'square'  },
-    boss:   { hp: 1000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
+    basic:    { hp: 60,   spd: 1.2, color: '#f88', reward: 10,  size: 10, shape: 'circle'  },
+    fast:     { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8,  shape: 'diamond' },
+    tank:     { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 10, shape: 'square'  },
+    specter:  { hp: 15,   spd: 11,  color: '#0ff', reward: 35,  size: 7,  shape: 'specter' },
+    boss:     { hp: 12000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
+    megaboss: { hp: 48000, spd: 0.3, color: '#ff6600', reward: 500, size: 20, shape: 'star', isMegaBoss: true },
   }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
   const hp = Math.round(base.hp * stage.difficulty);
   const start = PATH[0];
@@ -919,8 +1199,15 @@ function buildWaveQueue(wave) {
     let type = 'basic';
     if (ew >= 3 && Math.random() < 0.3) type = 'fast';
     if (ew >= 5 && Math.random() < 0.2) type = 'tank';
-    if (ew >= 8 && Math.random() < 0.05) type = 'boss';
+    if (ew >= 6 && Math.random() < 0.18) type = 'specter';
     q.push({ type, delay: i * 1200 });
+    if (ew >= 8 && Math.random() < 0.05) {
+      q.push({ type: 'boss', delay: i * 1200 + 600 });
+    }
+  }
+  q.sort((a, b) => a.delay - b.delay);
+  if (stage.bossStage && wave === stage.waves) {
+    q.push({ type: 'megaboss', delay: count * 1200 + 3000 });
   }
   return q;
 }
@@ -935,7 +1222,12 @@ function startWave() {
   startBtn.disabled = true;
   startBtn.textContent = 'Start Wave';
   startBtn.classList.remove('countdown');
-  setMsg('');
+  const stage = STAGES[state.stageId];
+  if (stage.bossStage && state.wave === stage.waves) {
+    setMsg('*** BOSS WAVE ***');
+  } else {
+    setMsg('');
+  }
 }
 
 function setMsg(t) { document.getElementById('msg').textContent = t; }
@@ -1160,6 +1452,28 @@ function update(dt, rawDt) {
     const target = PATH[en.pathIdx + 1];
     if (!target) {
       state.lives = Math.max(0, state.lives - 1);
+
+      // Goal explosion + damage feedback
+      const gx = en.x, gy = en.y;
+      state.effects.push({ x: gx, y: gy, r: 0, maxR: 18, life: 150, maxLife: 150, color: '#fff', type: 'explode' });
+      state.effects.push({ x: gx, y: gy, r: 0, maxR: 55, life: 380, maxLife: 380, color: '#ff2200', type: 'explode' });
+      state.effects.push({ x: gx, y: gy, r: 0, maxR: 38, life: 260, maxLife: 260, color: '#ff8800', type: 'explode' });
+      const MAX_PARTICLES = 300;
+      for (let i = 0; i < 30 && state.particles.length < MAX_PARTICLES; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 0.15 + Math.random() * 0.45;
+        state.particles.push({
+          x: gx, y: gy,
+          vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd,
+          r: 1.5 + Math.random() * 2.5,
+          life: 200 + Math.random() * 250, maxLife: 450,
+          color: ['#ff2200','#ff6600','#ff9900','#ffcc00','#fff'][Math.floor(Math.random() * 5)],
+          gravity: 0.0003 + Math.random() * 0.0002,
+        });
+      }
+      state.damageFlash = Math.min((state.damageFlash || 0) + 380, 700);
+      state.screenShake = Math.min((state.screenShake || 0) + 180, 350);
+
       updateUI();
       if (state.lives <= 0 && !state.gameEnded) {
         state.gameEnded = true;
@@ -1251,6 +1565,9 @@ function update(dt, rawDt) {
     return ef.life > 0;
   });
 
+  if (state.damageFlash > 0) state.damageFlash = Math.max(0, state.damageFlash - dt);
+  if (state.screenShake > 0) state.screenShake = Math.max(0, state.screenShake - dt);
+
   const drag = Math.pow(0.99, dt / 16);
   state.particles = state.particles.filter(p => {
     p.px = p.x; p.py = p.y;
@@ -1273,14 +1590,18 @@ function hitEnemy(en, dmg, slowMs) {
     state.gold += en.reward;
     state.score += en.reward;
 
-    const isBoss = en.shape === 'star';
+    const isMegaBoss = !!en.isMegaBoss;
+    const isBoss = en.shape === 'star' && !isMegaBoss;
     const isTank = en.shape === 'square';
-    const pCount = isBoss ? 100 : isTank ? 70 : 50;
+    const pCount = isMegaBoss ? 200 : isBoss ? 100 : isTank ? 70 : 50;
     const sz = en.size;
     const MAX_PARTICLES = 300;
 
     state.effects.push({ x: en.x, y: en.y, r: 0, maxR: sz * 2.2, life: 160, maxLife: 160, color: '#fff', type: 'explode' });
-    state.effects.push({ x: en.x, y: en.y, r: 0, maxR: sz * (isBoss ? 6.5 : 3.8), life: 380, maxLife: 380, color: '#ff6600', type: 'explode' });
+    state.effects.push({ x: en.x, y: en.y, r: 0, maxR: sz * (isMegaBoss ? 12 : isBoss ? 6.5 : 3.8), life: 380, maxLife: 380, color: '#ff6600', type: 'explode' });
+    if (isMegaBoss) {
+      state.effects.push({ x: en.x, y: en.y, r: 0, maxR: sz * 9, life: 600, maxLife: 600, color: '#ffaa00', type: 'explode' });
+    }
 
     const colorThemes = {
       circle:  ['#ff6600', '#ff8800', '#ffcc00', '#ff4400', '#ffee44'],
@@ -1289,7 +1610,7 @@ function hitEnemy(en, dmg, slowMs) {
       star:    ['#ff44ff', '#ff88ff', '#44ffff', '#ffff44', '#ff4444', '#44ff88', '#ffffff'],
     };
     const fireColors = colorThemes[en.shape] || colorThemes.circle;
-    const scale = isBoss ? 2.2 : 1;
+    const scale = isMegaBoss ? 4 : isBoss ? 2.2 : 1;
     const innerCount = Math.floor(pCount * 0.3);
     const outerCount = pCount - innerCount;
 
@@ -1324,6 +1645,18 @@ function hitEnemy(en, dmg, slowMs) {
 // ─── Draw ─────────────────────────────────────────────────────────────
 function draw() {
   ctx.clearRect(0, 0, W, H);
+
+  // Screen shake
+  const doShake = state.screenShake > 0;
+  if (doShake) {
+    const intensity = (state.screenShake / 350) * 7;
+    ctx.save();
+    ctx.translate(
+      (Math.random() - 0.5) * intensity,
+      (Math.random() - 0.5) * intensity
+    );
+  }
+
   const stage = STAGES[state.stageId];
   const cellCol = stage ? stage.cellColor : '#1a2a1a';
   const pathCol = stage ? stage.pathCellColor : '#2a3a2a';
@@ -1455,6 +1788,23 @@ function draw() {
     ctx.ellipse(en.x, en.y + en.size * 0.8, en.size * 0.7, en.size * 0.3, 0, 0, Math.PI*2);
     ctx.fill();
 
+    if (en.isMegaBoss) {
+      const pulse = 0.5 + 0.5 * Math.sin(lastTime / 200);
+      ctx.save();
+      ctx.globalAlpha = 0.22 + 0.12 * pulse;
+      ctx.fillStyle = en.color;
+      ctx.beginPath();
+      ctx.arc(en.x, en.y, en.size * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.5 + 0.3 * pulse;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(en.x, en.y, en.size * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     ctx.fillStyle = en.slowTimer > 0 ? '#aaf' : en.color;
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
@@ -1497,6 +1847,59 @@ function draw() {
       ctx.closePath();
       ctx.fill(); ctx.stroke();
       ctx.restore();
+    } else if (shape === 'specter') {
+      let angle = 0;
+      const nextPt = PATH[en.pathIdx + 1];
+      if (nextPt) {
+        angle = Math.atan2(nextPt[1] * CELL + CELL/2 - en.y, nextPt[0] * CELL + CELL/2 - en.x);
+      }
+      // outer glow halo
+      ctx.save();
+      ctx.globalAlpha = 0.25 + 0.1 * Math.sin(lastTime / 80);
+      ctx.fillStyle = en.color;
+      ctx.beginPath();
+      ctx.arc(en.x, en.y, en.size * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      // speed trail lines behind
+      if (nextPt) {
+        const trailAngle = angle + Math.PI;
+        ctx.save();
+        ctx.strokeStyle = en.color;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 3; i++) {
+          const offLen = (i + 1) * en.size * 0.8;
+          const spread = (i - 1) * en.size * 0.35;
+          ctx.globalAlpha = 0.5 - i * 0.12;
+          ctx.lineWidth = 1.8 - i * 0.4;
+          const sx = en.x + Math.cos(trailAngle) * offLen + Math.cos(angle + Math.PI/2) * spread;
+          const sy = en.y + Math.sin(trailAngle) * offLen + Math.sin(angle + Math.PI/2) * spread;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx + Math.cos(trailAngle) * en.size * 0.9, sy + Math.sin(trailAngle) * en.size * 0.9);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      // arrow body
+      ctx.save();
+      ctx.translate(en.x, en.y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(en.size * 1.3, 0);
+      ctx.lineTo(-en.size * 0.9, -en.size * 0.8);
+      ctx.lineTo(-en.size * 0.3, 0);
+      ctx.lineTo(-en.size * 0.9, en.size * 0.8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // bright tip
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.arc(en.size * 0.65, 0, en.size * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else {
       ctx.beginPath(); ctx.arc(en.x, en.y, en.size, 0, Math.PI*2); ctx.fill(); ctx.stroke();
     }
@@ -1524,6 +1927,25 @@ function draw() {
     ctx.fillStyle = '#400'; ctx.fillRect(bx, by, bw, bh);
     ctx.fillStyle = en.hp/en.maxHp > 0.5 ? '#4f4' : en.hp/en.maxHp > 0.25 ? '#ff4' : '#f44';
     ctx.fillRect(bx, by, bw * (en.hp / en.maxHp), bh);
+
+    if (en.isMegaBoss) {
+      ctx.save();
+      ctx.fillStyle = '#ff6600';
+      ctx.font = `bold ${Math.round(CELL * 0.27)}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('BOSS', en.x, by - 1);
+      ctx.restore();
+    }
+    if (en.shape === 'specter') {
+      ctx.save();
+      ctx.fillStyle = '#0ff';
+      ctx.font = `bold ${Math.round(CELL * 0.22)}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('FAST', en.x, by - 1);
+      ctx.restore();
+    }
   });
 
   state.bullets.forEach(b => {
@@ -1568,6 +1990,24 @@ function draw() {
     ctx.stroke();
   });
   ctx.restore();
+
+  // Damage flash overlay
+  if (state.damageFlash > 0) {
+    const flashAlpha = Math.min(state.damageFlash / 380, 1) * 0.48;
+    ctx.save();
+    ctx.globalAlpha = flashAlpha;
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, W, H);
+    // Vignette-like edge highlight
+    const grad = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.85);
+    grad.addColorStop(0, 'rgba(255,0,0,0)');
+    grad.addColorStop(1, `rgba(255,0,0,${flashAlpha * 0.8})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  if (doShake) ctx.restore();
 
   if (state.gameEnded) {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
