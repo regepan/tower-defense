@@ -832,11 +832,12 @@ function loadStage(stageId) {
   document.querySelectorAll('.tower-btn').forEach(b => b.classList.remove('selected'));
   document.querySelector('.tower-btn[data-type="basic"]').classList.add('selected');
   startBtn.disabled = false;
-  startBtn.textContent = 'Start Wave';
-  startBtn.classList.remove('countdown');
+  startBtn.classList.add('countdown');
   document.getElementById('stage-name-ui').textContent = stage.name;
   document.getElementById('wave-total').textContent = stage.waves;
   _lastCountdownSec = -1;
+  state.countdown = 10000;
+  state.countdownActive = true;
 
   updateUI();
   setMsg('');
