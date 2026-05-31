@@ -822,6 +822,7 @@ function loadStage(stageId) {
     towers: [], enemies: [], bullets: [], effects: [], particles: [],
     selectedType: 'basic',
     selectedTower: null,
+    selectionAnimStart: 0,
     spawnQueue: [], spawnTimer: 0,
     hoverCell: null,
     countdown: 0,
@@ -1031,6 +1032,7 @@ function handleTap(clientX, clientY) {
   const existing = state.towers.find(t => t.col === col && t.row === row);
   if (existing) {
     state.selectedTower = (state.selectedTower === existing) ? null : existing;
+    if (state.selectedTower) state.selectionAnimStart = lastTime;
     if (!state.selectedTower) setMsg('');
     updateUI();
     return;
@@ -1376,16 +1378,21 @@ function draw() {
     const t = state.selectedTower;
     const def = getEffectiveDef(t);
     const dispRange = (t.animRange !== undefined ? t.animRange : def.range) * CELL;
+    const ANIM_DURATION = 350;
+    const elapsed = lastTime - (state.selectionAnimStart || 0);
+    const progress = Math.min(elapsed / ANIM_DURATION, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const animRange = dispRange * eased;
     ctx.save();
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = 0.2 * eased;
     ctx.fillStyle = def.color;
-    ctx.beginPath(); ctx.arc(t.cx, t.cy, dispRange, 0, Math.PI*2); ctx.fill();
-    ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.arc(t.cx, t.cy, animRange, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.6 * eased;
     ctx.strokeStyle = def.color;
     ctx.lineWidth = 2;
     ctx.setLineDash([7, 5]);
     ctx.lineDashOffset = -(lastTime / 40);
-    ctx.beginPath(); ctx.arc(t.cx, t.cy, dispRange, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(t.cx, t.cy, animRange, 0, Math.PI*2); ctx.stroke();
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
     ctx.restore();
