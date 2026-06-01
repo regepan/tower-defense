@@ -1207,7 +1207,14 @@ function buildWaveQueue(wave) {
   }
   q.sort((a, b) => a.delay - b.delay);
   if (stage.bossStage && wave === stage.waves) {
-    q.push({ type: 'megaboss', delay: count * 1200 + 3000 });
+    const rushCount = Math.round(30 * Math.sqrt(stage.difficulty));
+    const rushBaseDelay = count * 1200 + 1000;
+    for (let i = 0; i < rushCount; i++) {
+      const r = Math.random();
+      const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
+      q.push({ type, delay: rushBaseDelay + i * 400 });
+    }
+    q.push({ type: 'megaboss', delay: rushBaseDelay + rushCount * 400 + 2000 });
   }
   return q;
 }
