@@ -1214,7 +1214,14 @@ function buildWaveQueue(wave) {
       const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
       q.push({ type, delay: rushBaseDelay + i * 400 });
     }
-    q.push({ type: 'megaboss', delay: rushBaseDelay + rushCount * 400 + 2000 });
+    const megabossDelay = rushBaseDelay + rushCount * 400 + 2000;
+    q.push({ type: 'megaboss', delay: megabossDelay });
+    const postCount = Math.round(60 * Math.sqrt(stage.difficulty));
+    for (let i = 0; i < postCount; i++) {
+      const r = Math.random();
+      const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
+      q.push({ type, delay: megabossDelay + 2000 + i * 600 });
+    }
   }
   return q;
 }
