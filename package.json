@@ -1,7 +1,7 @@
 {
-  "name": "tower-defense",
+  "name": "tiny-towers",
   "version": "1.0.0",
-  "description": "Tower Defense Game",
+  "description": "Tiny Towers",
   "main": "index.html",
   "scripts": {
     "dev": "npx serve www -p 9900",

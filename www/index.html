@@ -193,7 +193,6 @@
     <div class="stat">Score: <span id="score">0</span></div>
     <button id="start-btn">Start Wave</button>
     <button id="speed-btn" class="speed-btn">Speed: 1x</button>
-    <button id="music-btn" class="speed-btn active">♪ ON</button>
   </div>
   <canvas id="canvas"></canvas>
   <div id="panel">
@@ -1120,10 +1119,8 @@ function loadStage(stageId) {
 
   updateUI();
   setMsg('');
+  resumeAudio();
   showScreen('game');
-  BGM.stop();
-  if (bgmOn) BGM.start();
-  syncMusicBtn();
 }
 
 // ─── Tower Definitions ────────────────────────────────────────────────
@@ -1275,7 +1272,6 @@ function updateUI() {
 
 // ─── Result Screen ────────────────────────────────────────────────────
 function showResult(isWin) {
-  BGM.stop();
   const stage = STAGES[state.stageId];
   saveProgress(state.stageId, state.score, isWin);
 
@@ -1422,90 +1418,11 @@ function _getAC() {
   return _sharedAC;
 }
 
-// ─── BGM ──────────────────────────────────────────────────────────────
-const BGM = (() => {
-  let audioCtx = null, masterGain = null;
-  let isPlaying = false, schedulerTimer = null;
-  let step = 0, nextTime = 0;
-  const BPM = 128, STEP = 60 / BPM / 4, LOOKAHEAD = 0.12;
-  const _ = null;
-  const hz = {
-    D3:146.83, E3:164.81, F3:174.61, G3:196.00, A3:220.00, B3:246.94,
-    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88,
-    C5:523.25, D5:587.33, E5:659.25,
-  };
-  // 32-step loop (2 bars) — A minor
-  const mel = [
-    hz.A4,_,hz.C5,_,  hz.E5,_,hz.C5,_,  hz.D5,_,hz.B4,_,  hz.G4,hz.A4,hz.B4,_,
-    hz.A4,hz.E4,hz.C5,_,  hz.A4,_,hz.G4,hz.E4,  hz.F4,_,hz.A4,hz.C5,  hz.E5,_,hz.E4,_,
-  ];
-  const bas = [
-    hz.A3,_,_,_, hz.A3,_,_,_, hz.D3,_,_,_, hz.G3,_,_,_,
-    hz.F3,_,_,_, hz.F3,_,_,_, hz.E3,_,_,_, hz.E3,_,_,_,
-  ];
-  const kck = [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0];
-  const hht = [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0];
-  const LEN = mel.length;
-  function tone(f, t, d, type, vol) {
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = type; o.frequency.value = f;
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.connect(g); g.connect(masterGain);
-    o.start(t); o.stop(t + d + 0.01);
-  }
-  function doKick(t) {
-    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-    g.gain.setValueAtTime(0.65, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-    o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.18);
-  }
-  function doHihat(t) {
-    const len = Math.floor(audioCtx.sampleRate * 0.04);
-    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
-    const src = audioCtx.createBufferSource(), filt = audioCtx.createBiquadFilter(), g = audioCtx.createGain();
-    src.buffer = buf; filt.type = 'highpass'; filt.frequency.value = 7000;
-    g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
-    src.connect(filt); filt.connect(g); g.connect(masterGain);
-    src.start(t); src.stop(t + 0.05);
-  }
-  function schedule() {
-    while (nextTime < audioCtx.currentTime + LOOKAHEAD) {
-      const s = step % LEN;
-      if (mel[s]) tone(mel[s], nextTime, STEP * 0.7, 'square', 0.09);
-      if (bas[s]) tone(bas[s], nextTime, STEP * 1.5, 'triangle', 0.18);
-      if (kck[s]) doKick(nextTime);
-      if (hht[s]) doHihat(nextTime);
-      nextTime += STEP; step++;
-    }
-    schedulerTimer = setTimeout(schedule, 25);
-  }
-  return {
-    start() {
-      if (!audioCtx) {
-        audioCtx = _getAC();
-        if (!audioCtx) return;
-        masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.4;
-        masterGain.connect(audioCtx.destination);
-      }
-      if (isPlaying) return;
-      audioCtx.resume().then(() => {
-        isPlaying = true; step = 0;
-        nextTime = audioCtx.currentTime + 0.05;
-        schedule();
-      });
-    },
-    stop() {
-      isPlaying = false;
-      clearTimeout(schedulerTimer);
-    },
-    get active() { return isPlaying; },
-  };
-})();
+function resumeAudio() {
+  const ac = _getAC();
+  if (ac && ac.state === 'suspended') ac.resume().catch(() => {});
+  return ac;
+}
 
 // ─── SFX ──────────────────────────────────────────────────────────────
 const SFX = (() => {
@@ -1537,7 +1454,7 @@ const SFX = (() => {
   }
   return {
     shoot(type) {
-      const ac = _getAC(); if (!ac) return;
+      const ac = resumeAudio(); if (!ac) return;
       if (type === 'rapid' && !throttle('shoot', 80)) return;
       const t = ac.currentTime;
       if      (type === 'rapid')  sweep(ac, t, 1100, 350, 0.035, 'square',   0.07);
@@ -1547,7 +1464,7 @@ const SFX = (() => {
       else                        sweep(ac, t,  750, 180, 0.09,  'square',   0.11);
     },
     enemyDie(shape, isMegaBoss) {
-      const ac = _getAC(); if (!ac) return;
+      const ac = resumeAudio(); if (!ac) return;
       const t = ac.currentTime;
       if (isMegaBoss) {
         sweep(ac, t, 120, 25, 0.5, 'sawtooth', 0.45);
@@ -1569,25 +1486,13 @@ const SFX = (() => {
       }
     },
     leak() {
-      const ac = _getAC(); if (!ac) return;
+      const ac = resumeAudio(); if (!ac) return;
       const t = ac.currentTime;
       sweep(ac, t, 240, 55, 0.40, 'sawtooth', 0.36);
       noise(ac, t, 0.38, 'lowpass', 450, 0.26);
     },
   };
 })();
-
-let bgmOn = true;
-const musicBtn = document.getElementById('music-btn');
-function syncMusicBtn() {
-  musicBtn.textContent = bgmOn ? '♪ ON' : '♪ OFF';
-  musicBtn.classList.toggle('active', bgmOn);
-}
-musicBtn.addEventListener('click', () => {
-  bgmOn = !bgmOn;
-  if (bgmOn) BGM.start(); else BGM.stop();
-  syncMusicBtn();
-});
 
 // ─── Game Loop ────────────────────────────────────────────────────────
 let lastTime = 0;
