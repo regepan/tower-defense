@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Tower Defense</title>
+  <title>Tiny Towers</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -158,13 +158,29 @@
       opacity: 0.4; cursor: default;
     }
     .action-btn:hover:not(:disabled) { opacity: 0.8; }
+
+    @media (min-width: 768px) {
+      body { padding: 32px 40px; }
+
+      #screen-select {
+        min-height: calc(100dvh - 64px);
+        justify-content: flex-start;
+        gap: 24px;
+      }
+
+      .stage-section-title {
+        font-size: 1.15rem;
+        padding-bottom: 8px;
+        margin-bottom: 14px;
+      }
+    }
   </style>
 </head>
 <body>
 
 <!-- ── Stage Select ── -->
 <div id="screen-select" class="screen active">
-  <h2>Tower Defense</h2>
+  <h2>Tiny Towers</h2>
   <div class="subtitle">Select a Stage</div>
   <div id="stage-cards"></div>
 </div>
@@ -680,6 +696,7 @@ const STAGES = [
     pathCellColor: '#120028',
     pathLineColor: '#400080',
     bossStage: true,
+    bossHpMultiplier: 1.5,
   },
   {
     id: 10,
@@ -1179,7 +1196,8 @@ function spawnEnemy(type) {
     boss:     { hp: 12000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
     megaboss: { hp: 48000, spd: 0.3, color: '#ff6600', reward: 500, size: 20, shape: 'star', isMegaBoss: true },
   }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
-  const hp = Math.round(base.hp * stage.difficulty);
+  const bossHpMultiplier = (type === 'boss' || type === 'megaboss') ? (stage.bossHpMultiplier || 1) : 1;
+  const hp = Math.round(base.hp * stage.difficulty * bossHpMultiplier);
   const start = PATH[0];
   return {
     ...base, hp, maxHp: hp,
