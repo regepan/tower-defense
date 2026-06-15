@@ -855,11 +855,11 @@ const STAGES = [
     icon: '🔥',
     diffLabel: 'Hard',
     pathKey: 'inferno',
-    waves: 15,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.3,
-    waveOffset: 4,
+    waves: 12,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 0.9,
+    waveOffset: 1,
     cellColor: '#120200',
     pathCellColor: '#3a0800',
     pathLineColor: '#c03000',
@@ -870,11 +870,11 @@ const STAGES = [
     icon: '🌌',
     diffLabel: 'Hard',
     pathKey: 'void',
-    waves: 15,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.35,
-    waveOffset: 4,
+    waves: 12,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 0.92,
+    waveOffset: 1,
     cellColor: '#02000c',
     pathCellColor: '#0a0030',
     pathLineColor: '#3000a0',
@@ -885,11 +885,11 @@ const STAGES = [
     icon: '🔮',
     diffLabel: 'Hard',
     pathKey: 'nexus',
-    waves: 16,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.4,
-    waveOffset: 5,
+    waves: 13,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 0.94,
+    waveOffset: 1,
     cellColor: '#001014',
     pathCellColor: '#002838',
     pathLineColor: '#008090',
@@ -900,11 +900,11 @@ const STAGES = [
     icon: '🗺',
     diffLabel: 'Hard',
     pathKey: 'labyrinth',
-    waves: 16,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.45,
-    waveOffset: 5,
+    waves: 13,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 0.96,
+    waveOffset: 1,
     cellColor: '#0e0800',
     pathCellColor: '#2c1a00',
     pathLineColor: '#7a4800',
@@ -915,11 +915,11 @@ const STAGES = [
     icon: '🏰',
     diffLabel: 'Hard',
     pathKey: 'fortress',
-    waves: 18,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.5,
-    waveOffset: 5,
+    waves: 14,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 0.98,
+    waveOffset: 2,
     cellColor: '#06080e',
     pathCellColor: '#14182c',
     pathLineColor: '#404878',
@@ -930,11 +930,11 @@ const STAGES = [
     icon: '🌑',
     diffLabel: 'Hard',
     pathKey: 'shadow',
-    waves: 18,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.55,
-    waveOffset: 5,
+    waves: 14,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 1.0,
+    waveOffset: 2,
     cellColor: '#04020a',
     pathCellColor: '#100826',
     pathLineColor: '#380870',
@@ -945,11 +945,11 @@ const STAGES = [
     icon: '🌪',
     diffLabel: 'Hard',
     pathKey: 'tempest',
-    waves: 18,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.6,
-    waveOffset: 6,
+    waves: 14,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 1.02,
+    waveOffset: 2,
     cellColor: '#020610',
     pathCellColor: '#081830',
     pathLineColor: '#205080',
@@ -960,11 +960,11 @@ const STAGES = [
     icon: '💢',
     diffLabel: 'Hard',
     pathKey: 'chaos',
-    waves: 20,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.65,
-    waveOffset: 6,
+    waves: 15,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 1.04,
+    waveOffset: 2,
     cellColor: '#100200',
     pathCellColor: '#300800',
     pathLineColor: '#a02000',
@@ -975,11 +975,11 @@ const STAGES = [
     icon: '⚡',
     diffLabel: 'Hard',
     pathKey: 'zenith',
-    waves: 20,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.7,
-    waveOffset: 6,
+    waves: 15,
+    startGold: 300,
+    startLives: 40,
+    difficulty: 1.06,
+    waveOffset: 2,
     cellColor: '#0e0a00',
     pathCellColor: '#2c2200',
     pathLineColor: '#887000',
@@ -990,11 +990,11 @@ const STAGES = [
     icon: '💥',
     diffLabel: 'Hard',
     pathKey: 'omega',
-    waves: 20,
-    startGold: 180,
-    startLives: 20,
-    difficulty: 1.7,
-    waveOffset: 6,
+    waves: 16,
+    startGold: 320,
+    startLives: 45,
+    difficulty: 1.08,
+    waveOffset: 2,
     cellColor: '#0c0000',
     pathCellColor: '#280000',
     pathLineColor: '#900000',
@@ -1196,11 +1196,19 @@ function spawnEnemy(type) {
     boss:     { hp: 12000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
     megaboss: { hp: 48000, spd: 0.3, color: '#ff6600', reward: 500, size: 20, shape: 'star', isMegaBoss: true },
   }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
-  const bossHpMultiplier = (type === 'boss' || type === 'megaboss') ? (stage.bossHpMultiplier || 1) : 1;
+  const hardModeAssist = stage.diffLabel === 'Hard';
+  const isBoss = type === 'boss' || type === 'megaboss';
+  const bossHpMultiplier = isBoss ? (stage.bossHpMultiplier || 1) * (hardModeAssist ? 0.6 : 1) : 1;
   const hp = Math.round(base.hp * stage.difficulty * bossHpMultiplier);
+  const speedMultiplier = stage.enemySpeedMultiplier || (hardModeAssist ? 0.8 : 1);
+  const rewardMultiplier = stage.rewardMultiplier || (hardModeAssist ? 1.25 : 1);
   const start = PATH[0];
   return {
-    ...base, hp, maxHp: hp,
+    ...base,
+    hp,
+    maxHp: hp,
+    spd: base.spd * speedMultiplier,
+    reward: Math.round(base.reward * rewardMultiplier),
     pathIdx: 0,
     x: start[0] * CELL + CELL / 2,
     y: start[1] * CELL + CELL / 2,
@@ -1212,21 +1220,24 @@ function spawnEnemy(type) {
 function buildWaveQueue(wave) {
   const stage = STAGES[state.stageId];
   const ew = wave + stage.waveOffset;
-  const count = Math.round((8 + ew * 3) * Math.sqrt(stage.difficulty));
+  const hardModeAssist = stage.diffLabel === 'Hard';
+  const countMultiplier = stage.enemyCountMultiplier || (hardModeAssist ? 0.8 : 1);
+  const count = Math.round((8 + ew * 3) * Math.sqrt(stage.difficulty) * countMultiplier);
   const q = [];
   for (let i = 0; i < count; i++) {
     let type = 'basic';
     if (ew >= 3 && Math.random() < 0.3) type = 'fast';
     if (ew >= 5 && Math.random() < 0.2) type = 'tank';
-    if (ew >= 6 && Math.random() < 0.18) type = 'specter';
+    if (ew >= (hardModeAssist ? 8 : 6) && Math.random() < (hardModeAssist ? 0.1 : 0.18)) type = 'specter';
     q.push({ type, delay: i * 1200 });
-    if (ew >= 8 && Math.random() < 0.05) {
+    if (ew >= (hardModeAssist ? 10 : 8) && Math.random() < (hardModeAssist ? 0.03 : 0.05)) {
       q.push({ type: 'boss', delay: i * 1200 + 600 });
     }
   }
   q.sort((a, b) => a.delay - b.delay);
   if (stage.bossStage && wave === stage.waves) {
-    const rushCount = Math.round(30 * Math.sqrt(stage.difficulty));
+    const bossWaveCountMultiplier = hardModeAssist ? 0.55 : countMultiplier;
+    const rushCount = Math.round(30 * Math.sqrt(stage.difficulty) * bossWaveCountMultiplier);
     const rushBaseDelay = count * 1200 + 1000;
     for (let i = 0; i < rushCount; i++) {
       const r = Math.random();
@@ -1235,7 +1246,7 @@ function buildWaveQueue(wave) {
     }
     const megabossDelay = rushBaseDelay + rushCount * 400 + 2000;
     q.push({ type: 'megaboss', delay: megabossDelay });
-    const postCount = Math.round(60 * Math.sqrt(stage.difficulty));
+    const postCount = Math.round(60 * Math.sqrt(stage.difficulty) * bossWaveCountMultiplier);
     for (let i = 0; i < postCount; i++) {
       const r = Math.random();
       const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
