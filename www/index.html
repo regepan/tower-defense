@@ -696,7 +696,8 @@ const STAGES = [
     pathCellColor: '#120028',
     pathLineColor: '#400080',
     bossStage: true,
-    bossHpMultiplier: 1.5,
+    bossHpMultiplier: 2.25,
+    bossReinforcements: true,
   },
   {
     id: 10,
@@ -848,6 +849,8 @@ const STAGES = [
     pathCellColor: '#140040',
     pathLineColor: '#4000a8',
     bossStage: true,
+    bossHpMultiplier: 1.5,
+    bossReinforcements: true,
   },
   {
     id: 20,
@@ -1116,7 +1119,7 @@ function loadStage(stageId) {
     selectedType: 'basic',
     selectedTower: null,
     selectionAnimStart: 0,
-    spawnQueue: [], spawnTimer: 0,
+    spawnQueue: [], spawnTimer: 0, bossReinforcementTimer: 0,
     hoverCell: null,
     countdown: 0,
     countdownActive: false,
@@ -1173,7 +1176,7 @@ let state = {
   wave: 1, waveActive: false,
   towers: [], enemies: [], bullets: [], effects: [], particles: [],
   selectedType: 'basic', selectedTower: null,
-  spawnQueue: [], spawnTimer: 0,
+  spawnQueue: [], spawnTimer: 0, bossReinforcementTimer: 0,
   hoverCell: null, countdown: 0, countdownActive: false, gameEnded: false,
   damageFlash: 0, screenShake: 0,
 };
@@ -1246,11 +1249,13 @@ function buildWaveQueue(wave) {
     }
     const megabossDelay = rushBaseDelay + rushCount * 400 + 2000;
     q.push({ type: 'megaboss', delay: megabossDelay });
-    const postCount = Math.round(60 * Math.sqrt(stage.difficulty) * bossWaveCountMultiplier);
-    for (let i = 0; i < postCount; i++) {
-      const r = Math.random();
-      const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
-      q.push({ type, delay: megabossDelay + 2000 + i * 600 });
+    if (!stage.bossReinforcements) {
+      const postCount = Math.round(60 * Math.sqrt(stage.difficulty) * bossWaveCountMultiplier);
+      for (let i = 0; i < postCount; i++) {
+        const r = Math.random();
+        const type = r < 0.5 ? 'basic' : r < 0.8 ? 'fast' : 'tank';
+        q.push({ type, delay: megabossDelay + 2000 + i * 600 });
+      }
     }
   }
   return q;
@@ -1263,6 +1268,7 @@ function startWave() {
   state.waveActive = true;
   state.spawnQueue = buildWaveQueue(state.wave);
   state.spawnTimer = 0;
+  state.bossReinforcementTimer = 0;
   startBtn.disabled = true;
   startBtn.textContent = 'Start Wave';
   startBtn.classList.remove('countdown');
@@ -1555,9 +1561,23 @@ function update(dt, rawDt) {
     }
   }
 
+  const stage = STAGES[state.stageId];
+  const megaBossAlive = state.enemies.some(en => en.isMegaBoss && en.hp > 0);
+  if (state.waveActive && stage.bossReinforcements && state.wave === stage.waves && megaBossAlive) {
+    state.bossReinforcementTimer = Math.min(350, state.bossReinforcementTimer + dt);
+    const activeMinions = state.enemies.filter(en => !en.isMegaBoss && en.shape !== 'star' && en.hp > 0).length;
+    if (state.bossReinforcementTimer >= 350 && activeMinions < 40) {
+      state.bossReinforcementTimer = 0;
+      const r = Math.random();
+      const type = r < 0.45 ? 'basic' : r < 0.78 ? 'fast' : r < 0.95 ? 'tank' : 'specter';
+      state.enemies.push(spawnEnemy(type));
+    }
+  } else {
+    state.bossReinforcementTimer = 0;
+  }
+
   if (state.waveActive && state.spawnQueue.length === 0 && state.enemies.length === 0) {
     state.waveActive = false;
-    const stage = STAGES[state.stageId];
     if (state.wave >= stage.waves) {
       state.gameEnded = true;
       setTimeout(() => showResult(true), 800);
