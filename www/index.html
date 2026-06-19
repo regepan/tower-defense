@@ -91,8 +91,8 @@
     .stat span { color: #fff; font-weight: bold; }
     .stat.stage-stat { color: #fa4; }
     #canvas {
-      border: 2px solid #4af; cursor: crosshair; display: block;
-      width: 100%; max-width: 792px; aspect-ratio: 792 / 660; touch-action: none;
+      cursor: crosshair; display: block;
+      width: 100%; max-width: 880px; aspect-ratio: 880 / 748; touch-action: none;
     }
     #panel {
       display: flex; gap: 6px; margin-top: 8px;
@@ -241,10 +241,13 @@ const COLS = 18;
 const ROWS = 15;
 const W = CELL * COLS;
 const H = CELL * ROWS;
+const MAP_PAD = CELL;
+const CANVAS_W = W + MAP_PAD * 2;
+const CANVAS_H = H + MAP_PAD * 2;
 
 const canvas = document.getElementById('canvas');
-canvas.width = W;
-canvas.height = H;
+canvas.width = CANVAS_W;
+canvas.height = CANVAS_H;
 const ctx = canvas.getContext('2d');
 
 // ─── Stage Path Definitions ───────────────────────────────────────────
@@ -1543,8 +1546,8 @@ abolishBtn.addEventListener('click', () => {
 function getCanvasCoords(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   return {
-    mx: (clientX - rect.left) * (W / rect.width),
-    my: (clientY - rect.top) * (H / rect.height),
+    mx: (clientX - rect.left) * (CANVAS_W / rect.width) - MAP_PAD,
+    my: (clientY - rect.top) * (CANVAS_H / rect.height) - MAP_PAD,
   };
 }
 
@@ -1980,13 +1983,14 @@ function hitEnemy(en, dmg, slowMs) {
 
 // ─── Draw ─────────────────────────────────────────────────────────────
 function draw() {
-  ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  ctx.save();
+  ctx.translate(MAP_PAD, MAP_PAD);
 
   // Screen shake
   const doShake = state.screenShake > 0;
   if (doShake) {
     const intensity = (state.screenShake / 350) * 7;
-    ctx.save();
     ctx.translate(
       (Math.random() - 0.5) * intensity,
       (Math.random() - 0.5) * intensity
@@ -2008,7 +2012,10 @@ function draw() {
     }
   }
 
-  if (PATH.length === 0) return;
+  if (PATH.length === 0) {
+    ctx.restore();
+    return;
+  }
 
   ctx.strokeStyle = pathLineCol;
   ctx.lineWidth = 3;
@@ -2343,8 +2350,6 @@ function draw() {
     ctx.restore();
   }
 
-  if (doShake) ctx.restore();
-
   if (state.gameEnded) {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(0, 0, W, H);
@@ -2353,6 +2358,8 @@ function draw() {
     ctx.fillStyle = state.lives <= 0 ? '#f44' : '#4fa';
     ctx.fillText(state.lives <= 0 ? 'GAME OVER' : 'STAGE CLEAR!', W/2, H/2);
   }
+
+  ctx.restore();
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────
