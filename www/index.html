@@ -7,7 +7,8 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #1a1a2e;
+      --page-background: #1a1a2e;
+      background: var(--page-background);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1222,6 +1223,11 @@ function showScreen(name) {
   ['screen-select', 'screen-game', 'screen-result'].forEach(id => {
     document.getElementById(id).classList.toggle('active', id === `screen-${name}`);
   });
+  const gameBackground = STAGES[state.stageId]?.cellColor || '#1a1a2e';
+  document.body.style.setProperty(
+    '--page-background',
+    name === 'game' ? gameBackground : '#1a1a2e'
+  );
 }
 
 // ─── Stage Select ─────────────────────────────────────────────────────
