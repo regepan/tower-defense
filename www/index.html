@@ -1419,6 +1419,9 @@ function buildWaveQueue(wave) {
   const stage = STAGES[state.stageId];
   const ew = wave + stage.waveOffset;
   const hardModeAssist = stage.diffLabel === 'Hard';
+  const isSuperHard = stage.diffLabel === 'Super Hard';
+  // Super Hard's large wave offset must not make regular bosses appear near the start.
+  const regularBossMinWave = isSuperHard ? Math.ceil(stage.waves * 0.6) : 1;
   const countMultiplier = stage.enemyCountMultiplier || (hardModeAssist ? 0.8 : 1);
   const count = Math.round((8 + ew * 3) * Math.sqrt(stage.difficulty) * countMultiplier);
   const q = [];
@@ -1428,7 +1431,7 @@ function buildWaveQueue(wave) {
     if (ew >= 5 && Math.random() < 0.2) type = 'tank';
     if (ew >= (hardModeAssist ? 8 : 6) && Math.random() < (hardModeAssist ? 0.1 : 0.18)) type = 'specter';
     q.push({ type, delay: i * 1200 });
-    if (ew >= (hardModeAssist ? 10 : 8) && Math.random() < (hardModeAssist ? 0.03 : 0.05)) {
+    if (wave >= regularBossMinWave && ew >= (hardModeAssist ? 10 : 8) && Math.random() < (hardModeAssist ? 0.03 : 0.05)) {
       q.push({ type: 'boss', delay: i * 1200 + 600 });
     }
   }
