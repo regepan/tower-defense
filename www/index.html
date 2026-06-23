@@ -1391,8 +1391,8 @@ function spawnEnemy(type) {
     fast:     { hp: 30,   spd: 2.8, color: '#ff8', reward: 15,  size: 8,  shape: 'diamond' },
     tank:     { hp: 300,  spd: 0.6, color: '#a88', reward: 30,  size: 10, shape: 'square'  },
     specter:  { hp: 15,   spd: 11,  color: '#0ff', reward: 35,  size: 7,  shape: 'specter' },
-    boss:     { hp: 5000, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
-    megaboss: { hp: 50000, spd: 0.3, color: '#ff6600', reward: 500, size: 20, shape: 'star', isMegaBoss: true },
+    boss:     { hp: 4500, spd: 0.5, color: '#f4f', reward: 100, size: 13, shape: 'star'    },
+    megaboss: { hp: 45000, spd: 0.3, color: '#ff6600', reward: 500, size: 20, shape: 'star', isMegaBoss: true },
   }[type] || { hp: 60, spd: 1.2, color: '#f88', reward: 10, size: 10, shape: 'circle' };
   const hardModeAssist = stage.diffLabel === 'Hard';
   const isBoss = type === 'boss' || type === 'megaboss';
